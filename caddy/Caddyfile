@@ -51,5 +51,10 @@ https://{$DOMAIN}:443 {
         reverse_proxy ejabberd:5280
     }
 
+    // для adminer, но лучше через туннель
+    handle_path /adminer/* {
+        reverse_proxy adminer:8080
+    }
+
     file_server
 }

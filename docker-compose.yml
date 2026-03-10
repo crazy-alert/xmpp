@@ -53,7 +53,7 @@ services:
       - xmpp_network
 
   caddy:
-    build: ./caddy
+    build: ./caddy/build
     container_name: xmpp_caddy
     restart: unless-stopped
     ports:
@@ -71,6 +71,39 @@ services:
     depends_on:
       - ejabberd
       - php
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: xmpp_coturn
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TURN_USER=${TURN_USER}
+      - TURN_PASSWORD=${TURN_PASSWORD}
+      - TURN_REALM=${DOMAIN}
+      - TURN_SECRET=${TURN_SECRET}
+      - TURN_PORT=${TURN_PORT}
+      - TURN_TLS_PORT=${TURN_TLS_PORT}
+      - TURN_MIN_PORT=${TURN_MIN_PORT}
+      - TURN_MAX_PORT=${TURN_MAX_PORT}
+      - TURN_VERBOSE=1
+    command:
+      - -n
+      - --user=${TURN_USER}:${TURN_PASSWORD}
+      - --realm=${DOMAIN}
+      - --static-auth-secret=${TURN_SECRET}
+      - --listening-port=${TURN_PORT}
+      - --tls-listening-port=${TURN_TLS_PORT}
+      - --min-port=${TURN_MIN_PORT}
+      - --max-port=${TURN_MAX_PORT}
+      - --fingerprint
+      - --lt-cred-mech
+      - --use-auth-secret
+      - --no-tcp-relay
+      - --no-tlsv1
+      - --no-tlsv1_1
+      - --no-sslv3
+      - --log-file=stdout
 
   # Опционально: adminer для управления БД (доступ через Caddy, если добавить маршрут)
   adminer:

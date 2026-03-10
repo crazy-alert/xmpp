@@ -1,0 +1,55 @@
+{
+    servers {
+        listener_wrappers {
+            layer4 {
+                @xmpps-client {
+                    tls {
+                        sni {$DOMAIN}
+                        alpn xmpp-client
+                    }
+                }
+                route @xmpps-client {
+                    proxy {
+                        upstream ejabberd:5223
+                    }
+                }
+
+                @xmpps-server {
+                    tls {
+                        sni {$DOMAIN}
+                        alpn xmpp-server
+                    }
+                }
+                route @xmpps-server {
+                    proxy {
+                        upstream ejabberd:5270
+                    }
+                }
+            }
+            tls
+        }
+    }
+}
+
+https://{$DOMAIN}:443 {
+    log {
+        output file /var/log/caddy/access.log
+    }
+
+    root * /var/www/html
+    php_fastcgi php:9000
+
+    handle_path /admin/* {
+        reverse_proxy ejabberd:5280
+    }
+
+    handle_path /http-bind {
+        reverse_proxy ejabberd:5280
+    }
+
+    handle_path /ws/* {
+        reverse_proxy ejabberd:5280
+    }
+
+    file_server
+}

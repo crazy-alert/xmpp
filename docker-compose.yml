@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: xmpp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - xmpp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ejabberd:
+    image: ejabberd/ecs:latest
+    container_name: xmpp_ejabberd
+    restart: unless-stopped
+    environment:
+      # Основные настройки
+      EJABBERD_DOMAIN: ${DOMAIN}
+      EJABBERD_ADMIN: ${EJABBERD_ADMIN}
+      EJABBERD_ADMIN_PASSWORD: ${EJABBERD_ADMIN_PASSWORD}
+      EJABBERD_LANG: ${EJABBERD_LANG}
+
+      # База данных
+      EJABBERD_DB_TYPE: pgsql
+      EJABBERD_DB_HOST: postgres
+      EJABBERD_DB_PORT: 5432
+      EJABBERD_DB_NAME: ${POSTGRES_DB}
+      EJABBERD_DB_USER: ${POSTGRES_USER}
+      EJABBERD_DB_PASS: ${POSTGRES_PASSWORD}
+
+      # Слушатели (порты) — определяем через JSON
+      EJABBERD_LISTEN: >
+        [
+          {"port":5223, "ip":"::", "module":"ejabberd_c2s", "protocol":"tls",
+           "certfile":"${EJABBERD_SSL_DIR}/fullchain.pem", "starttls":false,
+           "access":"c2s", "shaper":"c2s_shaper", "max_stanza_size":65536},
+          {"port":5270, "ip":"::", "module":"ejabberd_s2s_in", "protocol":"tls",
+           "certfile":"${EJABBERD_SSL_DIR}/fullchain.pem", "starttls":false,
+           "shaper":"s2s_shaper"},
+          {"port":5280, "ip":"::", "module":"ejabberd_http",
+           "request_handlers":{
+             "/admin":"ejabberd_web_admin",
+             "/api":"mod_http_api",
+             "/http-bind":"mod_bosh",
+             "/ws":"ejabberd_http_ws"
+           },
+           "web_admin":true, "http_bind":true, "captcha":false}
+        ]
+    volumes:
+      - ./data/ejabberd/ssl:${EJABBERD_SSL_DIR}:ro
+      - ./data/ejabberd/backup:/home/ejabberd/backup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - xmpp_network
+
+  php:
+    image: php:8.4-fpm-alpine
+    container_name: xmpp_php
+    restart: unless-stopped
+    volumes:
+      - ./php:/var/www/html
+    networks:
+      - xmpp_network
+
+  caddy:
+    build: ./caddy
+    container_name: xmpp_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}   # передаём домен в Caddy для использования в Caddyfile
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
+      - ./php:/var/www/html
+    networks:
+      - xmpp_network
+    depends_on:
+      - ejabberd
+      - php
+
+  # Опционально: adminer для управления БД (доступ через Caddy, если добавить маршрут)
+  adminer:
+    image: adminer:latest
+    container_name: xmpp_adminer
+    restart: unless-stopped
+    networks:
+      - xmpp_network
+    depends_on:
+      - postgres
+    # Публиковать порты не нужно — доступ через прокси (если настроить)
+
+networks:
+  xmpp_network:
+    driver: bridge

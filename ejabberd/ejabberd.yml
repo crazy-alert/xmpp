@@ -2,116 +2,36 @@
 # Основные настройки
 # ======================
 hosts:
-  - xmpp.example.com
+  - "{{ DOMAIN }}"  # Подставится из переменной окружения
 
 loglevel: info
 
-## База данных PostgreSQL
+# База данных
 sql_type: pgsql
-sql_server: postgres
-sql_database: ejabberd
-sql_username: ejabberd
-sql_password: changeme
+sql_server: "{{ POSTGRES_HOST|default('postgres') }}"
+sql_database: "{{ POSTGRES_DB }}"
+sql_username: "{{ POSTGRES_USER }}"
+sql_password: "{{ POSTGRES_PASSWORD }}"
 sql_port: 5432
 sql_keepalive_interval: 30
 
 default_db: sql
-
 auth_method:
   - sql
 
-## Список модулей (можно оставить как есть или добавить свои)
-modules:
-  mod_adhoc: {}
-  mod_admin_extra: {}
-  mod_announce: {}
-  mod_avatar: {}
-  mod_blocking: {}
-  mod_caps: {}
-  mod_carboncopy: {}
-  mod_client_state: {}
-  mod_configure: {}
-  mod_disco: {}
-  mod_echo: {}
-  mod_http_api: {}
-  mod_http_upload:
-    put_url: "https://@HOST@:5443/upload"
-  mod_last: {}
-  mod_mam:
-    db_type: sql
-  mod_muc:
-    host: conference.@HOST@
-    access: muc
-    access_create: muc_admin
-    access_persistent: muc_admin
-  mod_muc_admin: {}
-  mod_offline: {}
-  mod_ping: {}
-  mod_privacy: {}
-  mod_private: {}
-  mod_pubsub:
-    access_createnode: pubsub_createnode
-    db_type: sql
-  mod_register:
-    access: register
-    password_strength: 20
-  mod_roster: {}
-  mod_shared_roster: {}
-  mod_stats: {}
-  mod_time: {}
-  mod_vcard: {}
-  mod_vcard_xupdate: {}
-  mod_version: {}
-
 # ======================
-# Слушатели (порты)
-# ======================
-listen:
-  - port: 5223
-    ip: "::"
-    module: ejabberd_c2s
-    protocol: tls          # Direct TLS (XEP-0368)
-    certfile: /home/ejabberd/ssl/fullchain.pem
-    starttls: false
-    access: c2s
-    shaper: c2s_shaper
-    max_stanza_size: 65536
-    tls_compression: false
-    tls_verify: false
-
-  - port: 5270
-    ip: "::"
-    module: ejabberd_s2s_in
-    protocol: tls          # Direct TLS для s2s
-    certfile: /home/ejabberd/ssl/fullchain.pem
-    starttls: false
-    shaper: s2s_shaper
-
-  - port: 5280
-    ip: "::"
-    module: ejabberd_http
-    request_handlers:
-      /admin: ejabberd_web_admin
-      /api: mod_http_api
-      /http-bind: mod_bosh
-      /ws: ejabberd_http_ws
-    web_admin: true
-    http_bind: true
-    captcha: false
-
-# ======================
-# ACL и ограничения
+# ACL и администраторы
 # ======================
 acl:
+  admin:
+    user:
+      - "{{ EJABBERD_ADMIN }}"
   local:
     user_regexp: ""
   loopback:
     ip:
       - "127.0.0.0/8"
       - "::1/128"
-  admin:
-    user:
-      - "admin@xmpp.example.com"
 
 access_rules:
   local:
@@ -143,3 +63,82 @@ shaper_rules:
     - none: admin
     - normal
   s2s_shaper: fast
+
+# ======================
+# Слушатели (порты)
+# ======================
+listen:
+  - port: 5223
+    ip: "::"
+    module: ejabberd_c2s
+    protocol: tls
+    certfile: "{{ EJABBERD_SSL_DIR }}/fullchain.pem"
+    starttls: false
+    access: c2s
+    shaper: c2s_shaper
+    max_stanza_size: 65536
+
+  - port: 5270
+    ip: "::"
+    module: ejabberd_s2s_in
+    protocol: tls
+    certfile: "{{ EJABBERD_SSL_DIR }}/fullchain.pem"
+    starttls: false
+    shaper: s2s_shaper
+
+  - port: 5280
+    ip: "::"
+    module: ejabberd_http
+    request_handlers:
+      /admin: ejabberd_web_admin
+      /api: mod_http_api
+      /http-bind: mod_bosh
+      /ws: ejabberd_http_ws
+    web_admin: true
+    http_bind: true
+    captcha: false
+
+# ======================
+# Модули (можно расширять)
+# ======================
+modules:
+  mod_adhoc: {}
+  mod_admin_extra: {}
+  mod_announce: {}
+  mod_avatar: {}
+  mod_blocking: {}
+  mod_caps: {}
+  mod_carboncopy: {}
+  mod_client_state: {}
+  mod_configure: {}
+  mod_disco: {}
+  mod_echo: {}
+  mod_http_api: {}
+  mod_http_upload:
+    put_url: "https://@HOST@/upload"
+  mod_last: {}
+  mod_mam:
+    db_type: sql
+  mod_muc:
+    host: conference.@HOST@
+    access: muc
+    access_create: muc_admin
+    access_persistent: muc_admin
+  mod_muc_admin: {}
+  mod_offline: {}
+  mod_ping: {}
+  mod_privacy: {}
+  mod_private: {}
+  mod_pubsub:
+    access_createnode: pubsub_createnode
+    db_type: sql
+  mod_register:
+    access: register
+    password_strength: 20
+  mod_roster: {}
+  mod_shared_roster: {}
+  mod_stats: {}
+  mod_time: {}
+  mod_vcard: {}
+  mod_vcard_xupdate: {}
+  mod_version: {}

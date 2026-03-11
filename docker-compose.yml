@@ -53,7 +53,7 @@ services:
     networks:
       - xmpp_network
 
-  ccaddy:
+  caddy:
     image: caddy:latest
     container_name: xmpp_caddy
     restart: unless-stopped

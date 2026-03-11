@@ -22,8 +22,8 @@ define_macro:
   TURN_TLS_PORT: 5349
 
 certfiles:
-  - "/certs/@HOST@/@HOST@.crt"
-  - "/certs/@HOST@/@HOST@.key"
+  - "/certs/fullchain.pem"
+  - "/certs/privkey.pem"
 
 # ------------------------------
 # 2. Основные настройки хостов и логирования

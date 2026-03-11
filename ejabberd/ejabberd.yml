@@ -10,20 +10,20 @@
 # Эти макросы можно переопределить через переменные окружения
 # вида EJABBERD_MACRO_ИМЯ_МАКРОСА (например, EJABBERD_MACRO_DOMAIN)
 define_macro:
-  DOMAIN: "{{ DOMAIN }}"                         # Ваш домен (из .env)
-  ADMIN_JID: "admin@{{ DOMAIN }}"                 # JID администратора
-  SSL_DIR: "{{ EJABBERD_SSL_DIR }}"               # Путь к сертификатам
-  DB_NAME: "{{ POSTGRES_DB_NAME }}"                    # Имя БД
-  DB_USER: "{{ POSTGRES_USER }}"                  # Пользователь БД
-  DB_PASS: "{{ POSTGRES_PASSWORD }}"              # Пароль БД
-  TURN_SECRET: "{{ TURN_SECRET }}"                # Секрет для TURN (из .env)
+  HOST: " "                         # Ваш домен (из .env)
+  ADMIN_JID: " "                 # JID администратора
+  SSL_DIR: " "               # Путь к сертификатам
+  DB_NAME: " "                    # Имя БД
+  DB_USER: " "                  # Пользователь БД
+  DB_PASS: " "              # Пароль БД
+  TURN_SECRET: " "                # Секрет для TURN (из .env)
 
 # ------------------------------
 # 2. Основные настройки хостов и логирования
 # ------------------------------
 # Список доменов, которые обслуживает сервер
 hosts:
-  - "DOMAIN"
+  - HOST
 
 # Уровень логирования: 0 (нет) | 1 (критическое) | 2 (ошибки) | 3 (предупреждения) | 4 (инфо) | 5 (отладка)
 loglevel: 4
@@ -35,9 +35,9 @@ loglevel: 4
 sql_type: pgsql
 sql_server: "postgres"               # имя сервиса в Docker Compose
 sql_port: 5432
-sql_database: "DB_NAME"
-sql_username: "DB_USER"
-sql_password: "DB_PASS"
+sql_database: DB_NAME
+sql_username: DB_USER
+sql_password: DB_PASS
 
 # Интервал проверки соединения с БД (в секундах)
 sql_keepalive_interval: 30
@@ -56,7 +56,7 @@ acl:
   # Администраторы — список JID
   admin:
     user:
-      - "ADMIN_JID"
+      - ADMIN_JID
 
   # Локальные пользователи (регулярное выражение для всех)
   local:
@@ -207,7 +207,7 @@ modules:
   # 8.2. Групповые чаты (MUC)
   #
   mod_muc:
-    host: "conference.DOMAIN"          # Адрес конференций
+    host: "conference.HOST"          # Адрес конференций
     access: muc                        # Правило доступа к комнатам
     access_create: muc_admin            # Кто может создавать комнаты
     access_persistent: muc_admin        # Кто может делать комнаты постоянными
@@ -266,16 +266,16 @@ modules:
   # 8.8. STUN/TURN для голосовых звонков (интеграция с Coturn)
   #
   mod_stun_disco:
-    secret: "TURN_SECRET"                # Тот же секрет, что в Coturn
+    secret: TURN_SECRET                # Тот же секрет, что в Coturn
     services:
-      - host: "DOMAIN"
+      - host: DOMAIN
         port: {{ TURN_PORT }}            # порт 3478 (из .env)
         type: stun
-      - host: "DOMAIN"
+      - host: DOMAIN
         port: {{ TURN_PORT }}
         type: turn
         transport: udp
-      - host: "DOMAIN"
+      - host: DOMAIN
         port: {{ TURN_TLS_PORT }}        # порт 5349
         type: turns
         transport: tcp

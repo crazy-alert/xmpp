@@ -22,8 +22,8 @@ define_macro:
   TURN_TLS_PORT: 5349
 
 certfiles:
-  - "SSL_DIR/fullchain.pem"
-  - "SSL_DIR/privkey.pem"   # если требуется
+  - SSL_DIR/fullchain.pem
+  - SSL_DIR/privkey.pem   # если требуется
 
 # ------------------------------
 # 2. Основные настройки хостов и логирования
@@ -40,7 +40,7 @@ loglevel: 4
 # ------------------------------
 # Тип БД: pgsql (PostgreSQL), mysql, mnesia (встроенная)
 sql_type: pgsql
-sql_server: "postgres"               # имя сервиса в Docker Compose
+sql_server: postgres              # имя сервиса в Docker Compose
 sql_port: 5432
 sql_database: DB_NAME
 sql_username: DB_USER

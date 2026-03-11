@@ -33,12 +33,10 @@ services:
        EJABBERD_MACRO_TURN_PORT: ${TURN_PORT}
        EJABBERD_MACRO_TURN_TLS_PORT: ${TURN_TLS_PORT}
     volumes:
-      - ./data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}:/certs:ro
+      - ./data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt:/certs:ro
       - ./ejabberd/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml:ro
       - ./data/ejabberd/backup:/home/ejabberd/backup
     depends_on:
-      caddy:
-        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
@@ -54,28 +52,27 @@ services:
       - xmpp_network
 
   caddy:
-    image: caddy:latest
+    build: ./caddy/build
     container_name: xmpp_caddy
     restart: unless-stopped
-    user: "1000:1000"  # или любой другой UID
+    user: "1000:1000"
     cap_add:
-      - NET_BIND_SERVICE  # позволяет открывать порты <1024 не-root пользователем
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      - NET_BIND_SERVICE
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}   # передаём домен в Caddy для использования в Caddyfile
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./caddy_data:/data
-      - ./caddy_data/config:/config
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
       - ./php:/var/www/html
     networks:
       - xmpp_network
+    depends_on:
+      - ejabberd
+      - php
 
   coturn:
     image: coturn/coturn:latest

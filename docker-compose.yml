@@ -33,11 +33,12 @@ services:
        EJABBERD_MACRO_TURN_PORT: ${TURN_PORT}
        EJABBERD_MACRO_TURN_TLS_PORT: ${TURN_TLS_PORT}
     volumes:
-      - ./caddy_data/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt:/certs/fullchain.pem:ro
-      - ./caddy_data/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.key:/certs/privkey.pem:ro
+      - ./data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}:/certs:ro
       - ./ejabberd/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml:ro
       - ./data/ejabberd/backup:/home/ejabberd/backup
     depends_on:
+      caddy:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
@@ -59,6 +60,12 @@ services:
     user: "1000:1000"  # или любой другой UID
     cap_add:
       - NET_BIND_SERVICE  # позволяет открывать порты <1024 не-root пользователем
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     ports:
       - "80:80"
       - "443:443"

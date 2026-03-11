@@ -25,7 +25,7 @@ services:
       # Основные переменные - они переопределят значения в YAML
        EJABBERD_MACRO_HOST: ${DOMAIN}
        EJABBERD_MACRO_ADMIN_JID: ${EJABBERD_ADMIN_JID}
-       EJABBERD_MACRO_SSL_DIR: ${EJABBERD_SSL_DIR}
+       EJABBERD_MACRO_SSL_DIR: /certs
        EJABBERD_MACRO_DB_NAME: ${POSTGRES_DB}
        EJABBERD_MACRO_DB_USER: ${POSTGRES_USER}
        EJABBERD_MACRO_DB_PASS: ${POSTGRES_PASSWORD}
@@ -35,7 +35,7 @@ services:
        EJABBERD_MACRO_TURN_TLS_PORT: ${TURN_TLS_PORT}
     volumes:
       - ./ejabberd/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml:ro
-      - ./data/ejabberd/ssl:${EJABBERD_SSL_DIR}:ro
+      - ./data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}:/certs:ro
       - ./data/ejabberd/backup:/home/ejabberd/backup
     depends_on:
       postgres:

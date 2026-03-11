@@ -8,15 +8,22 @@
 # 1. Глобальные макросы
 # ------------------------------
 # Эти макросы можно переопределить через переменные окружения
-# вида EJABBERD_MACRO_ИМЯ_МАКРОСА (например, EJABBERD_MACRO_DOMAIN)
+# вида EJABBERD_MACRO_ИМЯ_МАКРОСА (например, EJABBERD_MACRO_HOST)
 define_macro:
-  HOST: " "                         # Ваш домен (из .env)
-  ADMIN_JID: " "                 # JID администратора
-  SSL_DIR: " "               # Путь к сертификатам
-  DB_NAME: " "                    # Имя БД
-  DB_USER: " "                  # Пользователь БД
-  DB_PASS: " "              # Пароль БД
-  TURN_SECRET: " "                # Секрет для TURN (из .env)
+  HOST: ""                  # Ваш домен (из .env)
+  ADMIN_JID: ""             # JID администратора
+  SSL_DIR: ""               # Путь к сертификатам
+  DB_NAME: ""               # Имя БД
+  DB_USER: ""               # Пользователь БД
+  DB_PASS: ""               # Пароль БД
+  TURN_SECRET: ""           # Секрет для TURN (из .env)
+  STUN_PORT: 3470
+  TURN_PORT: 3478
+  TURN_TLS_PORT: 5349
+
+certfiles:
+  - "SSL_DIR/fullchain.pem"
+  - "SSL_DIR/privkey.pem"   # если требуется
 
 # ------------------------------
 # 2. Основные настройки хостов и логирования
@@ -71,7 +78,7 @@ acl:
   # Примеры других ACL (раскомментируйте при необходимости)
   # trusted:
   #   ip: "192.168.1.0/24"
-  #   user: "backup@DOMAIN"
+  #   user: "backup@HOST"
 
 # ------------------------------
 # 5. Правила доступа (Access Rules)
@@ -137,13 +144,12 @@ listen:
   - port: 5223
     ip: "::"
     module: ejabberd_c2s
-    protocol: tls                     # Direct TLS (не STARTTLS)
+    tls: true
     certfile: "SSL_DIR/fullchain.pem"
-    starttls: false                   # обязательно false для Direct TLS
+    starttls: false
     access: c2s
     shaper: c2s_shaper
     max_stanza_size: 65536
-
   #
   # 7.2. Сервер-сервер (s2s) для федерации, также Direct TLS
   #      Порт 5270, ожидает трафик от Caddy с ALPN = xmpp-server
@@ -151,7 +157,7 @@ listen:
   - port: 5270
     ip: "::"
     module: ejabberd_s2s_in
-    protocol: tls
+    tls: true
     certfile: "SSL_DIR/fullchain.pem"
     starttls: false
     shaper: s2s_shaper
@@ -164,14 +170,14 @@ listen:
     ip: "::"
     module: ejabberd_http
     request_handlers:
-      "/admin": ejabberd_web_admin       # Веб-интерфейс администратора
-      "/api": mod_http_api                # REST API
-      "/http-bind": mod_bosh              # BOSH (для веб-клиентов)
-      "/ws": ejabberd_http_ws             # WebSocket
-      "/upload": mod_http_upload           # Если включите модуль upload
-    web_admin: true
-    http_bind: true
-    captcha: false
+      "/admin": ejabberd_web_admin
+      "/api": mod_http_api
+      "/http-bind": mod_bosh        # стандартный путь для BOSH
+      "/ws": ejabberd_http_ws
+      "/upload": mod_http_upload
+    # web_admin: true               ← удалить
+    # http_bind: true               ← удалить
+    # captcha: false                 ← удалить
 
 # ------------------------------
 # 8. Модули (функциональные расширения)
@@ -241,12 +247,12 @@ modules:
   # 8.5. HTTP Upload (обмен файлами)
   #
   mod_http_upload:
-    put_url: "https://DOMAIN/upload"    # Внешний URL для загрузки
+    put_url: "https://HOST/upload"    # Внешний URL для загрузки
     docroot: "/home/ejabberd/upload"     # Локальная папка для хранения
     access: all
     max_size: 104857600                   # Максимальный размер файла (100 МБ)
     ## Вариант с подписанными ссылками (более безопасный)
-    ## put_url: "https://DOMAIN:5443/upload"
+    ## put_url: "https://HOST:5443/upload"
     ## secret_url: "ваш-секрет"
 
   #
@@ -268,15 +274,15 @@ modules:
   mod_stun_disco:
     secret: TURN_SECRET                # Тот же секрет, что в Coturn
     services:
-      - host: DOMAIN
-        port: {{ TURN_PORT }}            # порт 3478 (из .env)
+      - host: HOST
+        port: STUN_PORT            # порт 3478 (из .env)
         type: stun
-      - host: DOMAIN
-        port: {{ TURN_PORT }}
+      - host: HOST
+        port: TURN_PORT
         type: turn
         transport: udp
-      - host: DOMAIN
-        port: {{ TURN_TLS_PORT }}        # порт 5349
+      - host: HOST
+        port: TURN_TLS_PORT        # порт 5349
         type: turns
         transport: tcp
 
@@ -289,9 +295,7 @@ modules:
 # 9. Дополнительные настройки
 # ------------------------------
 
-# Настройки межсерверных соединений (s2s)
-s2s_use_starttls: false                  # Мы используем Direct TLS, не STARTTLS
-s2s_certfile: "SSL_DIR/fullchain.pem"
+
 
 # Настройки для ограничения числа попыток регистрации (защита от спама)
 registration_timeout: 600                 # Секунд между регистрациями с одного IP

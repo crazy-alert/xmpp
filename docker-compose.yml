@@ -23,16 +23,13 @@ services:
     restart: unless-stopped
     environment:
       # Основные переменные - они переопределят значения в YAML
-      EJABBERD_DOMAIN: ${DOMAIN}
-      EJABBERD_ADMIN: ${EJABBERD_ADMIN}
-      EJABBERD_ADMIN_PASSWORD: ${EJABBERD_ADMIN_PASSWORD}
-      EJABBERD_LANG: ${EJABBERD_LANG}
-      EJABBERD_DB_TYPE: pgsql
-      EJABBERD_DB_HOST: postgres
-      EJABBERD_DB_PORT: 5432
-      EJABBERD_DB_NAME: ${POSTGRES_DB}
-      EJABBERD_DB_USER: ${POSTGRES_USER}
-      EJABBERD_DB_PASS: ${POSTGRES_PASSWORD}
+       EJABBERD_MACRO_DOMAIN: ${DOMAIN}
+       EJABBERD_MACRO_EJABBERD_SSL_DIR: ${EJABBERD_SSL_DIR}
+       EJABBERD_MACRO_POSTGRES_DB_NAME: ${POSTGRES_DB}
+       EJABBERD_MACRO_POSTGRES_DB_PORT: 5432
+       EJABBERD_MACRO_POSTGRES_USER: ${POSTGRES_USER}
+       EJABBERD_MACRO_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+       EJABBERD_MACRO_TURN_SECRET: ${TURN_SECRET}
     volumes:
       - ./ejabberd/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml:ro
       - ./data/ejabberd/ssl:${EJABBERD_SSL_DIR}:ro

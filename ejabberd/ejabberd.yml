@@ -14,7 +14,6 @@ define_macro:
   ADMIN_JID: "admin@{{ DOMAIN }}"                 # JID администратора
   SSL_DIR: "{{ EJABBERD_SSL_DIR }}"               # Путь к сертификатам
   DB_NAME: "{{ POSTGRES_DB_NAME }}"                    # Имя БД
-  DB_PORT: "{{ POSTGRES_DB_PORT}}"                    # Имя БД
   DB_USER: "{{ POSTGRES_USER }}"                  # Пользователь БД
   DB_PASS: "{{ POSTGRES_PASSWORD }}"              # Пароль БД
   TURN_SECRET: "{{ TURN_SECRET }}"                # Секрет для TURN (из .env)
@@ -35,7 +34,7 @@ loglevel: 4
 # Тип БД: pgsql (PostgreSQL), mysql, mnesia (встроенная)
 sql_type: pgsql
 sql_server: "postgres"               # имя сервиса в Docker Compose
-sql_port: DB_PORT
+sql_port: 5432
 sql_database: "DB_NAME"
 sql_username: "DB_USER"
 sql_password: "DB_PASS"

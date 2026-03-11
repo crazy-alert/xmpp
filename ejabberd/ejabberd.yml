@@ -145,7 +145,6 @@ listen:
     ip: "::"
     module: ejabberd_c2s
     tls: true
-    certfile: "SSL_DIR/fullchain.pem"
     starttls_required: true
     access: c2s
     shaper: c2s_shaper
@@ -158,7 +157,6 @@ listen:
     ip: "::"
     module: ejabberd_s2s_in
     tls: true
-    certfile: "SSL_DIR/fullchain.pem"
     shaper: s2s_shaper
 
   #
@@ -195,7 +193,6 @@ modules:
   mod_client_state: {}         # Client State Indication (экономия трафика)
   mod_configure: {}            # Конфигурирование через XMPP
   mod_disco: {}                # Service Discovery
-  mod_echo: {}                 # Эхо-сервер (для тестов)
   mod_last: {}                 # Last Activity
   mod_offline: {}              # Хранение офлайн-сообщений
   mod_ping: {}                 # Ping
@@ -218,9 +215,9 @@ modules:
     access_persistent: muc_admin        # Кто может делать комнаты постоянными
     access_admin: admin                  # Кто является администратором MUC
     ## Пример настройки Jingle (голос/видео в комнатах)
-    jingle:
-      enabled: true
-      relay_type: turn
+    # jingle:
+    #   enabled: true
+    #   relay_type: turn
 
   #
   # 8.3. Управление архивами сообщений (MAM)

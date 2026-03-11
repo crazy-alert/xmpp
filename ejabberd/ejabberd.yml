@@ -146,7 +146,7 @@ listen:
     module: ejabberd_c2s
     tls: true
     certfile: "SSL_DIR/fullchain.pem"
-    starttls: false
+    starttls_required: true
     access: c2s
     shaper: c2s_shaper
     max_stanza_size: 65536
@@ -159,7 +159,6 @@ listen:
     module: ejabberd_s2s_in
     tls: true
     certfile: "SSL_DIR/fullchain.pem"
-    starttls: false
     shaper: s2s_shaper
 
   #

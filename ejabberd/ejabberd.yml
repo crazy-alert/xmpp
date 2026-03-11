@@ -22,8 +22,8 @@ define_macro:
   TURN_TLS_PORT: 5349
 
 certfiles:
-  - "SSL_DIR/@HOST@.crt"
-  - "SSL_DIR/@HOST@.key" 
+  - SSL_DIR/@HOST@.crt
+  - SSL_DIR/@HOST@.key 
 
 # ------------------------------
 # 2. Основные настройки хостов и логирования

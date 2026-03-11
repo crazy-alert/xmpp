@@ -209,7 +209,7 @@ modules:
   # 8.2. Групповые чаты (MUC)
   #
   mod_muc:
-    host: "conference.HOST"          # Адрес конференций
+    host: conference.HOST          # Адрес конференций
     access: muc                        # Правило доступа к комнатам
     access_create: muc_admin            # Кто может создавать комнаты
     access_persistent: muc_admin        # Кто может делать комнаты постоянными
@@ -243,8 +243,8 @@ modules:
   # 8.5. HTTP Upload (обмен файлами)
   #
   mod_http_upload:
-    put_url: "https://HOST/upload"    # Внешний URL для загрузки
-    docroot: "/home/ejabberd/upload"     # Локальная папка для хранения
+    put_url: https://HOST/upload    # Внешний URL для загрузки
+    docroot: /home/ejabberd/upload     # Локальная папка для хранения
     access: all
     max_size: 104857600                   # Максимальный размер файла (100 МБ)
     ## Вариант с подписанными ссылками (более безопасный)

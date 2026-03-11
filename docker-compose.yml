@@ -25,7 +25,6 @@ services:
       # Основные переменные - они переопределят значения в YAML
        EJABBERD_MACRO_HOST: ${DOMAIN}
        EJABBERD_MACRO_ADMIN_JID: ${EJABBERD_ADMIN_JID}
-       EJABBERD_MACRO_SSL_DIR: /certs
        EJABBERD_MACRO_DB_NAME: ${POSTGRES_DB}
        EJABBERD_MACRO_DB_USER: ${POSTGRES_USER}
        EJABBERD_MACRO_DB_PASS: ${POSTGRES_PASSWORD}

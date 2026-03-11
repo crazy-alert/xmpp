@@ -1,7 +1,6 @@
 # Ejabberd (XMPP-сервер), PostgreSQL, Caddy с плагином caddy-l4 (для мультиплексирования XMPP и HTTPS на порту 443) и PHP 8.4 (через PHP-FPM) для возможного запуска веб-приложений.
 
-```
-bash
+```bash
 cp example.env .env &&
 nano .env
 ```

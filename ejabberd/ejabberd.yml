@@ -22,8 +22,8 @@ define_macro:
   TURN_TLS_PORT: 5349
 
 certfiles:
-  - SSL_DIR/fullchain.pem
-  - SSL_DIR/privkey.pem   # если требуется
+  - "SSL_DIR/@HOST@.crt"
+  - "SSL_DIR/@HOST@.key" 
 
 # ------------------------------
 # 2. Основные настройки хостов и логирования
@@ -209,7 +209,7 @@ modules:
   # 8.2. Групповые чаты (MUC)
   #
   mod_muc:
-    host: conference.HOST          # Адрес конференций
+    host: conference.@HOST@          # Адрес конференций
     access: muc                        # Правило доступа к комнатам
     access_create: muc_admin            # Кто может создавать комнаты
     access_persistent: muc_admin        # Кто может делать комнаты постоянными

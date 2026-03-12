@@ -1,0 +1,314 @@
+# ====================================================================
+# Конфигурация ejabberd для работы с Caddy и Coturn
+# Версия: 1.0
+# Документация: https://docs.ejabberd.im/admin/guide/configuration/
+# ====================================================================
+
+# ------------------------------
+# 1. Глобальные макросы
+# ------------------------------
+# Эти макросы можно переопределить через переменные окружения
+# вида EJABBERD_MACRO_ИМЯ_МАКРОСА (например, EJABBERD_MACRO_HOST)
+define_macro:
+  HOST: ""                  # Ваш домен (из .env)
+  ADMIN_JID: ""             # JID администратора
+  SSL_DIR: ""               # Путь к сертификатам
+  DB_NAME: ""               # Имя БД
+  DB_USER: ""               # Пользователь БД
+  DB_PASS: ""               # Пароль БД
+  TURN_SECRET: ""           # Секрет для TURN (из .env)
+  STUN_PORT: 3470
+  TURN_PORT: 3478
+  TURN_TLS_PORT: 5349
+
+certfiles:
+  - "/certs/@HOST@/@HOST@.crt"
+  - "/certs/@HOST@/@HOST@.key"
+
+# ------------------------------
+# 2. Основные настройки хостов и логирования
+# ------------------------------
+# Список доменов, которые обслуживает сервер
+hosts:
+  - HOST
+
+# Уровень логирования: 0 (нет) | 1 (критическое) | 2 (ошибки) | 3 (предупреждения) | 4 (инфо) | 5 (отладка)
+loglevel: 4
+
+# ------------------------------
+# 3. База данных PostgreSQL
+# ------------------------------
+# Тип БД: pgsql (PostgreSQL), mysql, mnesia (встроенная)
+sql_type: pgsql
+sql_server: postgres              # имя сервиса в Docker Compose
+sql_port: 5432
+sql_database: DB_NAME
+sql_username: DB_USER
+sql_password: DB_PASS
+
+# Интервал проверки соединения с БД (в секундах)
+sql_keepalive_interval: 30
+
+# Какая база используется по умолчанию для хранения данных (ram | sql | both)
+default_db: sql
+
+# Методы аутентификации: internal (Mnesia), sql, ldap, anonymous, external
+auth_method:
+  - sql
+
+# ------------------------------
+# 4. ACL (Access Control Lists) — кто есть кто
+# ------------------------------
+acl:
+  # Администраторы — список JID
+  admin:
+    user:
+      - ADMIN_JID
+
+  # Локальные пользователи (регулярное выражение для всех)
+  local:
+    user_regexp: ""
+
+  # Зарезервированные IP (localhost)
+  loopback:
+    ip:
+      - "127.0.0.0/8"
+      - "::1/128"
+
+  # Примеры других ACL (раскомментируйте при необходимости)
+  # trusted:
+  #   ip: "192.168.1.0/24"
+  #   user: "backup@HOST"
+
+# ------------------------------
+# 5. Правила доступа (Access Rules)
+# ------------------------------
+access_rules:
+  # Правило для локальных пользователей
+  local:
+    allow: local
+
+  # Для клиентских соединений (c2s)
+  c2s:
+    deny: blocked
+    allow: all
+
+  # Для объявлений (только админы)
+  announce:
+    allow: admin
+
+  # Для изменения конфигурации (только админы)
+  configure:
+    allow: admin
+
+  # Для создания групповых чатов (MUC)
+  muc_create:
+    allow: local
+
+  # Для создания узлов PubSub
+  pubsub_createnode:
+    allow: local
+
+  # Регистрация новых пользователей (открыта для всех)
+  register:
+    allow: all
+
+# ------------------------------
+# 6. Шейперы (ограничение трафика)
+# ------------------------------
+# Определяем профили
+shaper:
+  normal: 1000        # 1000 байт/сек
+  fast: 50000         # 50000 байт/сек
+
+# Применяем шейперы к разным категориям
+shaper_rules:
+  max_user_sessions: 10               # макс. сессий на пользователя
+  max_user_offline_messages:
+    - 5000: admin                     # админам можно до 5000 офлайн-сообщений
+    - 100                              # обычным пользователям — 100
+  c2s_shaper:
+    - none: admin                      # админы без ограничений
+    - normal                            # остальные — normal
+  s2s_shaper: fast                      # межсерверный трафик — fast
+
+# ------------------------------
+# 7. Слушатели (порты, на которых сервер принимает соединения)
+# ------------------------------
+listen:
+  #
+  # 7.1. Клиентские соединения (c2s) с Direct TLS (XEP-0368)
+  #      Этот порт будет принимать трафик от Caddy, когда ALPN = xmpp-client
+  #      Порт 5223 внутри контейнера, наружу не торчит.
+  #
+  - port: 5223
+    ip: "::"
+    module: ejabberd_c2s
+    tls: true
+    starttls_required: true
+    access: c2s
+    shaper: c2s_shaper
+    max_stanza_size: 65536
+  #
+  # 7.2. Сервер-сервер (s2s) для федерации, также Direct TLS
+  #      Порт 5270, ожидает трафик от Caddy с ALPN = xmpp-server
+  #
+  - port: 5270
+    ip: "::"
+    module: ejabberd_s2s_in
+    tls: true
+    shaper: s2s_shaper
+
+  #
+  # 7.3. HTTP-сервер для веб-админки, BOSH и WebSocket
+  #      Caddy проксирует запросы на этот порт (5280)
+  #
+  - port: 5280
+    ip: "::"
+    module: ejabberd_http
+    request_handlers:
+      "/admin": ejabberd_web_admin
+      "/api": mod_http_api
+      "/http-bind": mod_bosh        # стандартный путь для BOSH
+      "/ws": ejabberd_http_ws
+      "/upload": mod_http_upload
+    # web_admin: true               ← удалить
+    # http_bind: true               ← удалить
+    # captcha: false                 ← удалить
+
+# ------------------------------
+# 8. Модули (функциональные расширения)
+# ------------------------------
+modules:
+  #
+  # 8.1. Базовые модули (рекомендуются для любого сервера)
+  #
+  mod_adhoc: {}                # Ad-hoc команды
+  mod_admin_extra: {}          # Дополнительные команды для админов
+  mod_announce: {}             # Объявления
+  mod_avatar: {}               # Аватары
+  mod_blocking: {}             # Блокировка контактов (XEP-0191)
+  mod_caps: {}                 # Entity Capabilities
+  mod_carboncopy: {}           # Копирование сообщений на все ресурсы (XEP-0280)
+  mod_client_state: {}         # Client State Indication (экономия трафика)
+  mod_configure: {}            # Конфигурирование через XMPP
+  mod_disco: {}                # Service Discovery
+  mod_last: {}                 # Last Activity
+  mod_offline: {}              # Хранение офлайн-сообщений
+  mod_ping: {}                 # Ping
+  mod_privacy: {}              # Приватные списки
+  mod_private: {}              # Приватные XML-хранилища
+  mod_roster: {}               # Контакт-лист
+  mod_stats: {}                # Статистика
+  mod_time: {}                 # Entity Time
+  mod_vcard: {}                # Визитные карточки
+  mod_vcard_xupdate: {}        # Обновления vCard
+  mod_version: {}              # Версия софта
+
+  #
+  # 8.2. Групповые чаты (MUC)
+  #
+  mod_muc:
+    host: conference.@HOST@          # Адрес конференций
+    access: muc                        # Правило доступа к комнатам
+    access_create: muc_admin            # Кто может создавать комнаты
+    access_persistent: muc_admin        # Кто может делать комнаты постоянными
+    access_admin: admin                  # Кто является администратором MUC
+    ## Пример настройки Jingle (голос/видео в комнатах)
+    # jingle:
+    #   enabled: true
+    #   relay_type: turn
+
+  #
+  # 8.3. Управление архивами сообщений (MAM)
+  #
+  mod_mam:
+    db_type: sql                        # Хранить архивы в SQL
+    default: always                      # По умолчанию архивировать всё
+    request_activates_archiving: true    # Пользователь может включить архив
+
+  #
+  # 8.4. PubSub (для капсул, уведомлений и т.п.)
+  #
+  mod_pubsub:
+    access_createnode: pubsub_createnode
+    db_type: sql
+    ignore_pep_from_offline: false
+    last_item_cache: false
+    plugins:
+      - flat
+      - pep
+
+  #
+  # 8.5. HTTP Upload (обмен файлами)
+  #
+  mod_http_upload:
+    put_url: https://HOST/upload    # Внешний URL для загрузки
+    docroot: /home/ejabberd/upload     # Локальная папка для хранения
+    access: all
+    max_size: 104857600                   # Максимальный размер файла (100 МБ)
+    ## Вариант с подписанными ссылками (более безопасный)
+    ## put_url: "https://HOST:5443/upload"
+    ## secret_url: "ваш-секрет"
+
+  #
+  # 8.6. Push-уведомления для мобильных клиентов
+  #
+  mod_push: {}
+  mod_push_keepalive: {}                 # Держит сессию для push
+  #  реализует управление потоком (XEP-0198). Он позволяет клиентам возобновлять сессии после временного разрыва соединения и улучшает работу push-уведомлений, особенно для мобильных клиентов
+  mod_stream_mgmt: {}
+  #
+  # 8.7. Регистрация новых пользователей
+  #
+  mod_register:
+    access: register
+    password_strength: 20                # Минимальная длина пароля
+
+  #
+  # 8.8. STUN/TURN для голосовых звонков (интеграция с Coturn)
+  #
+  mod_stun_disco:
+    secret: TURN_SECRET                # Тот же секрет, что в Coturn
+    services:
+      - host: HOST
+        port: STUN_PORT            # порт 3478 (из .env)
+        type: stun
+      - host: HOST
+        port: TURN_PORT
+        type: turn
+        transport: udp
+      - host: HOST
+        port: TURN_TLS_PORT        # порт 5349
+        type: turns
+        transport: tcp
+
+  #
+  # 8.9. Пример дополнительного модуля: общие ростера для организаций
+  #
+  ## mod_shared_roster: {}
+
+# ------------------------------
+# 9. Дополнительные настройки
+# ------------------------------
+
+
+
+# Настройки для ограничения числа попыток регистрации (защита от спама)
+registration_timeout: 600                 # Секунд между регистрациями с одного IP
+
+# Настройки для шифрования паролей (scram — рекомендуется)
+auth_password_format: scram
+auth_scram_hash: sha256
+
+# Включение веб-админки только для локальных сетей (опционально)
+## {5280, ejabberd_http, [
+##   {request_handlers, [
+##     {["admin"], ejabberd_web_admin}
+##   ]},
+##   {ip, {127,0,0,1}}
+## ]}
+
+# ====================================================================
+# Конец конфигурации
+# ====================================================================

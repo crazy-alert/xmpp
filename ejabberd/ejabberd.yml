@@ -11,6 +11,9 @@ certfiles:
   - "/certs/@HOST@/@HOST@.crt"
   - "/certs/@HOST@/@HOST@.key"
 
+        chmod 644 /ejabberd-certs/domain.pem &&
+      chmod 600 /ejabberd-certs/domain.key
+
 # ------------------------------
 # 2. Основные настройки хостов и логирования
 # ------------------------------

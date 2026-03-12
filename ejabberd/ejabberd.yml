@@ -8,7 +8,7 @@ define_macro:
   TURN_SECRET: ""           # Секрет для TURN (из .env)
   
 certfiles:
-  - "/certs/domain.crt"
+  - "/certs/domain.pem"
   - "/certs/domain.key"
 # ------------------------------
 # 2. Основные настройки хостов и логирования

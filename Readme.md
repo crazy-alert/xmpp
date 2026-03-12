@@ -56,3 +56,12 @@ dig _xmpps-client._tcp.xmpp.example.com SRV
 ```
 В ответ вы должны увидеть что-то похожее на:
 `_xmpps-client._tcp.xmpp.example.com. 3600 IN SRV 5 0 443 xmpp.example.com.`
+
+
+read -p "Введите доменное имя: " DOMAIN &&
+cp data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt data/ejabberd/ssl/domain.pem &&
+cp data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.key data/ejabberd/ssl/domain.key &&
+chown 9000:9000 data/ejabberd/ssl/* &&
+chmod 640 data/ejabberd/ssl/domain.key &&
+chmod 644 data/ejabberd/ssl/domain.pem
+

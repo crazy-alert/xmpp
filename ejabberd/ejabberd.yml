@@ -126,7 +126,7 @@ modules:                   # Подключенные модули ejabberd
         persist_items: true    # Хранить данные
         max_items: 100         # Максимум 100 сообщений
   mod_push: {}             # Push-уведомления
-       notify_on: all      # Тоже пуши 
+    notify_on: all      # Тоже пуши 
   mod_push_keepalive: {}   # Поддержка keepalive для push
   mod_register:            # Регистрация пользователей
     access: none           # Отключена (запрет регистрации)

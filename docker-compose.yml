@@ -44,8 +44,6 @@ services:
       - ./data/ejabberd/backup:/home/ejabberd/backup
       - ./data/ejabberd/upload:/home/ejabberd/upload
     depends_on:
-      cert-initializer:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     networks:

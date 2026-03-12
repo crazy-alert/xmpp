@@ -61,9 +61,6 @@ services:
     build: ./caddy/build
     container_name: xmpp_caddy
     restart: unless-stopped
-    user: "1000:1000"
-    cap_add:
-      - NET_BIND_SERVICE
     ports:
       - "80:80"
       - "443:443"

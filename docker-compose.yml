@@ -77,7 +77,6 @@ services:
     networks:
       - xmpp_network
     depends_on:
-      - ejabberd
       - php
 
   coturn:
@@ -122,10 +121,10 @@ services:
       sh -c "
       apk add --no-cache curl &&
       while [ ! -f /caddy-data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt ]; do sleep 5; done &&
-      cp /caddy-data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt /ejabberd-certs/domain.pem &&
+      cp /caddy-data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt /ejabberd-certs/domain.crt &&
       cp /caddy-data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.key /ejabberd-certs/domain.key &&
       chown 9000:9000 /ejabberd-certs/* &&
-      chmod 644 /ejabberd-certs/domain.pem &&
+      chmod 644 /ejabberd-certs/domain.crt &&
       chmod 600 /ejabberd-certs/domain.key
       "
     depends_on:

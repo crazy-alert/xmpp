@@ -32,10 +32,6 @@
 }
 
 https://{$DOMAIN}:443 {
-    log {
-        output file /var/log/caddy/access.log
-    }
-
     root * /var/www/html
     php_fastcgi php:9000
 

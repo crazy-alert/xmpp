@@ -8,8 +8,8 @@ define_macro:
   TURN_SECRET: ""           # Секрет для TURN (из .env)
   
 certfiles:
-  - "/ejabberd-certs/domain.crt"
-  - "/ejabberd-certs/domain.key"
+  - "/certs/domain.crt"
+  - "/certs/domain.key"
 # ------------------------------
 # 2. Основные настройки хостов и логирования
 # ------------------------------

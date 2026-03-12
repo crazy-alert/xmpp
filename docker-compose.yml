@@ -38,7 +38,7 @@ services:
       - "5223:5223"        #
       - "55269:5269"       #
     volumes:
-      - ejabberd-certs:/etc/ejabberd/certs:ro
+      - ./ejabberd/ecerts:/etc/ejabberd/certs:ro
       # - ./data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/:/certs:ro
       - ./ejabberd/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml:ro
       - ./data/ejabberd/backup:/home/ejabberd/backup
@@ -112,23 +112,6 @@ services:
       - --no-sslv3
       - --log-file=stdout
   
-  cert-initializer:
-    image: alpine:latest
-    volumes:
-      - ./data/caddy/data:/caddy-data:ro
-      - ejabberd-certs:/ejabberd-certs
-    command: >
-      sh -c "
-      apk add --no-cache curl &&
-      while [ ! -f /caddy-data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt ]; do sleep 5; done &&
-      cp /caddy-data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.crt /ejabberd-certs/domain.crt &&
-      cp /caddy-data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN}/${DOMAIN}.key /ejabberd-certs/domain.key &&
-      chown 9000:9000 /ejabberd-certs/* &&
-      chmod 644 /ejabberd-certs/domain.crt &&
-      chmod 600 /ejabberd-certs/domain.key
-      "
-    depends_on:
-      - caddy
   # Опционально: adminer для управления БД (доступ через Caddy, если добавить маршрут)
   adminer:
     image: adminer:latest
@@ -139,8 +122,7 @@ services:
     depends_on:
       - postgres
     # Публиковать порты не нужно — доступ через прокси (если настроить)
-volumes:
-  ejabberd-certs:
+
 
 networks:
   xmpp_network:

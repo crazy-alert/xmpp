@@ -79,7 +79,7 @@ listen:                    # Конфигурация прослушиваемы
       "/bosh": mod_bosh           # BOSH (HTTP-подключение XMPP-клиентов)
       "/ws": ejabberd_http_ws     # WebSocket-подключения
       "/upload": mod_http_upload  # HTTP File Upload
-    tls: false             # HTTPS не используется (работает только через HTTP)
+    tls: true             # HTTPS не используется (работает только через HTTP)
 
   - port: 3478             # UDP-порт для STUN/TURN (VoIP, WebRTC)
     transport: udp
@@ -99,6 +99,8 @@ listen:                    # Конфигурация прослушиваемы
 s2s_use_starttls: optional # Нужно чтоб завести пуши на IOS
 
 modules:                   # Подключенные модули ejabberd
+  mod_roster:
+    db_type: sql
   mod_admin_update_sql: {}
   mod_fail2ban: {}
   mod_adhoc: {}            # Ad-hoc команды (XEP-0050)

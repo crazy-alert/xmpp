@@ -51,15 +51,15 @@ https://{$DOMAIN}:443 {
         reverse_proxy adminer:8080
     }
 
-    handle_path /upload/* {
-        reverse_proxy ejabberd:5280
-    }
-
-    handle_path /pubsub/* {
-        reverse_proxy ejabberd:5280
-    }
-
     file_server
+}
+
+pubsub.{$DOMAIN} {
+    reverse_proxy ejabberd:5280
+}
+
+upload.{$DOMAIN} {
+    reverse_proxy ejabberd:5280
 }
 
 conference.{$DOMAIN} {

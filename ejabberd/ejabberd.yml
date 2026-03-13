@@ -100,13 +100,7 @@ s2s_use_starttls: optional # Нужно чтоб завести пуши на IO
 
 modules:                   # Подключенные модули ejabberd
   mod_roster:
-    auth_method: sql
-    sql_type: pgsql
-    sql_server: postgres
-    sql_port: 5432
-    sql_database: DB_NAME
-    sql_username: DB_USER
-    sql_password: DB_PASS
+    db_type: sql
   mod_admin_update_sql: {}
   mod_fail2ban: {}
   mod_adhoc: {}            # Ad-hoc команды (XEP-0050)

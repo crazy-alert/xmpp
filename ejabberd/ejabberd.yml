@@ -115,7 +115,9 @@ modules:                   # Подключенные модули ejabberd
     max_size: 104857600    # Максимальный размер файла (100 МБ)
   mod_last: {}             # Последняя активность пользователя (XEP-0012)
   mod_mam:                 # Message Archive Management (XEP-0313)
+    db_type: sql
     default: always        # Всегда сохранять сообщения
+    mod_mam:
   mod_muc:                 # Multi-User Chat (XEP-0045)
     access: all            # Доступен всем
     access_create: all     # Любой может создавать комнаты
@@ -138,8 +140,10 @@ modules:                   # Подключенные модули ejabberd
   mod_push: {}             # Push-уведомления
   # notify_on: all      # Тоже пуши 
   mod_push_keepalive: {}   # Поддержка keepalive для push
+  mod_stream_mgmt: {}
   mod_register:            # Регистрация пользователей
     access: none           # Отключена (запрет регистрации)
     ip_access: none        # Нельзя регистрироваться ни с какого IP
+    captcha: true
     registration_watchers: # Уведомления о регистрации
       - ADMIN_JID # Администратор получает уведомления

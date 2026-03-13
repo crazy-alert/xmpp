@@ -26,6 +26,7 @@ sql_port: 5432
 sql_database: DB_NAME
 sql_username: DB_USER
 sql_password: DB_PASS
+default_db: sql
 # sql_schema_multihost: true
 
 
@@ -100,7 +101,6 @@ s2s_use_starttls: optional # Нужно чтоб завести пуши на IO
 
 modules:                   # Подключенные модули ejabberd
   mod_roster:
-    db_type: sql
   mod_admin_update_sql: {}
   mod_fail2ban: {}
   mod_adhoc: {}            # Ad-hoc команды (XEP-0050)
@@ -108,13 +108,7 @@ modules:                   # Подключенные модули ejabberd
   mod_announce:            # Модуль объявлений (broadcast)
     access: admin          # Только администраторы могут рассылать
   mod_vcard: 
-    db_type: sql
-    sql_type: pgsql
-    sql_server: postgres
-    sql_port: 5432
-    sql_database: DB_NAME
-    sql_username: DB_USER
-    sql_password: DB_PASS
+
   mod_vcard_xupdate: {}
   mod_avatar: {}           # Поддержка аватаров пользователей
   mod_blocking: {}         # Блокировка контактов (XEP-0191)
@@ -130,15 +124,8 @@ modules:                   # Подключенные модули ejabberd
     docroot: "/home/ejabberd/upload"           # Папка для хранения файлов
     max_size: 104857600    # Максимальный размер файла (100 МБ)
   mod_last:            # Последняя активность пользователя (XEP-0012)
-    db_type: sql
+
   mod_mam:                 # Message Archive Management (XEP-0313)
-    db_type: sql
-    sql_type: pgsql
-    sql_server: postgres
-    sql_port: 5432
-    sql_database: DB_NAME
-    sql_username: DB_USER
-    sql_password: DB_PASS
     default: always        # Всегда сохранять сообщения
   mod_muc:                 # Multi-User Chat (XEP-0045)
     hosts: 

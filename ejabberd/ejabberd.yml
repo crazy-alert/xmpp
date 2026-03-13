@@ -120,7 +120,8 @@ modules:                   # Подключенные модули ejabberd
     default: always        # Всегда сохранять сообщения
   mod_muc:                 # Multi-User Chat (XEP-0045)
     hosts: 
-      - "https://@HOST@/conference/"
+      - "conference.@HOST@"
+      - "chat.@HOST@"
     access: all            # Доступен всем
     access_create: all     # Любой может создавать комнаты
     access_persistent: all # Разрешены постоянные комнаты

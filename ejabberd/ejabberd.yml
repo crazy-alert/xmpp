@@ -8,16 +8,16 @@ define_macro:
   TURN_SECRET: ""           # Секрет для TURN (из .env)
   
 certfiles:
-  - /certs/HOST.pem
-  - /certs/HOST.key
-  - /certs/chat.HOST.pem
-  - /certs/chat.HOST.key
-  - /certs/conference.HOST.pem
-  - /certs/conference.HOST.key
-  - /certs/pubsub.HOST.pem
-  - /certs/pubsub.HOST.key
-  - /certs/upload.HOST.pem
-  - /certs/upload.HOST.key
+  - "/certs/@HOST@.pem"
+  - "/certs/@HOST@.key"
+  - "/certs/chat.@HOST@.pem"
+  - "/certs/chat.@HOST@.key"
+  - "/certs/conference.@HOST@.pem"
+  - "/certs/conference.@HOST@.key"
+  - "/certs/pubsub.@HOST@.pem"
+  - "/certs/pubsub.@HOST@.key"
+  - "/certs/upload.@HOST@.pem"
+  - "/certs/upload.@HOST@.key"
 
 # default_db: internal       # Используется встроенная база данных ejabberd (Mnesia)
 sql_type: pgsql

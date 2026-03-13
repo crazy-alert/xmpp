@@ -117,7 +117,6 @@ modules:                   # Подключенные модули ejabberd
   mod_mam:                 # Message Archive Management (XEP-0313)
     db_type: sql
     default: always        # Всегда сохранять сообщения
-    mod_mam:
   mod_muc:                 # Multi-User Chat (XEP-0045)
     access: all            # Доступен всем
     access_create: all     # Любой может создавать комнаты
@@ -147,4 +146,4 @@ modules:                   # Подключенные модули ejabberd
     captcha: true
     registration_watchers: # Уведомления о регистрации
       - ADMIN_JID # Администратор получает уведомления
-      
+

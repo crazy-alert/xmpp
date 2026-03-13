@@ -109,10 +109,8 @@ modules:                   # Подключенные модули ejabberd
   mod_configure: {}        # Конфигурация через XMPP
   mod_disco: {}            # Service Discovery (XEP-0030)
   mod_http_api: {}         # REST API
-  mod_http_upload:         # HTTP File Upload (XEP-0363)
-    host: "@HOST@/upload"   
-    put_url: "@HOST@/upload"
-    get_url: "@HOST@/upload"
+  mod_http_upload:
+    put_url: "https://@HOST@:5443/upload"
     docroot: "/home/ejabberd/upload"           # Папка для хранения файлов
     max_size: 104857600    # Максимальный размер файла (100 МБ)
   mod_last:            # Последняя активность пользователя (XEP-0012)
@@ -132,7 +130,7 @@ modules:                   # Подключенные модули ejabberd
   mod_private:           # Хранение приватных данных (XEP-0049)
     db_type: sql
   mod_pubsub:              # PubSub (XEP-0060)
-    host: "@HOST@/pubsub"
+    host: "https://@HOST@/pubsub"
     access_createnode: all # Разрешено всем создавать узлы
     plugins:               # Подключенные плагины
       - "flat"             # Простая структура

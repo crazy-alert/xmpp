@@ -22,7 +22,7 @@
                 }
                 route @xmpps-server {
                     proxy {
-                        upstream ejabberd:5270
+                        upstream ejabberd:5269
                     }
                 }
             }

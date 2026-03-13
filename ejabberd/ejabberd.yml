@@ -79,7 +79,7 @@ listen:                    # Конфигурация прослушиваемы
       "/bosh": mod_bosh           # BOSH (HTTP-подключение XMPP-клиентов)
       "/ws": ejabberd_http_ws     # WebSocket-подключения
       "/upload": mod_http_upload  # HTTP File Upload
-    tls: true             # HTTPS не используется (работает только через HTTP)
+    tls: false             # HTTPS не используется (работает только через HTTP)
 
   - port: 3478             # UDP-порт для STUN/TURN (VoIP, WebRTC)
     transport: udp

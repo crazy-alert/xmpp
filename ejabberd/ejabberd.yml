@@ -157,8 +157,8 @@ modules:                   # Подключенные модули ejabberd
   mod_push_keepalive: {}   # Поддержка keepalive для push
   mod_stream_mgmt: {}
   mod_register:            # Регистрация пользователей
-    access: none           # Отключена (запрет регистрации)
-    ip_access: none        # Нельзя регистрироваться ни с какого IP
+    # access: none           # Отключена (запрет регистрации)
+    # ip_access: none        # Нельзя регистрироваться ни с какого IP
     captcha_protected: false
     registration_watchers: # Уведомления о регистрации
       - ADMIN_JID # Администратор получает уведомления

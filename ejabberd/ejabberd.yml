@@ -147,3 +147,4 @@ modules:                   # Подключенные модули ejabberd
     captcha: true
     registration_watchers: # Уведомления о регистрации
       - ADMIN_JID # Администратор получает уведомления
+      

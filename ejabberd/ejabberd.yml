@@ -110,8 +110,9 @@ modules:                   # Подключенные модули ejabberd
   mod_disco: {}            # Service Discovery (XEP-0030)
   mod_http_api: {}         # REST API
   mod_http_upload:         # HTTP File Upload (XEP-0363)
-    put_url: "https://@HOST@/upload" # URL для загрузки файлов
-    get_url: "https://@HOST@/upload" # URL для скачивания файлов
+    host: "@HOST@"   
+    put_url: "@HOST@/upload"
+    get_url: "@HOST@/upload"
     docroot: "/home/ejabberd/upload"           # Папка для хранения файлов
     max_size: 104857600    # Максимальный размер файла (100 МБ)
   mod_last:            # Последняя активность пользователя (XEP-0012)
@@ -120,6 +121,7 @@ modules:                   # Подключенные модули ejabberd
     db_type: sql
     default: always        # Всегда сохранять сообщения
   mod_muc:                 # Multi-User Chat (XEP-0045)
+    host: "@HOST@/conference"
     access: all            # Доступен всем
     access_create: all     # Любой может создавать комнаты
     access_persistent: all # Разрешены постоянные комнаты
@@ -130,6 +132,7 @@ modules:                   # Подключенные модули ejabberd
   mod_private:           # Хранение приватных данных (XEP-0049)
     db_type: sql
   mod_pubsub:              # PubSub (XEP-0060)
+    host: "@HOST@/pubsub"
     access_createnode: all # Разрешено всем создавать узлы
     plugins:               # Подключенные плагины
       - "flat"             # Простая структура

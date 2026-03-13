@@ -119,7 +119,6 @@ modules:                   # Подключенные модули ejabberd
   mod_disco: {}            # Service Discovery (XEP-0030)
   mod_http_api: {}         # REST API
   mod_http_upload:
-    put_url: "https://upload.@HOST@"
     docroot: "/home/ejabberd/upload"           # Папка для хранения файлов
     max_size: 104857600    # Максимальный размер файла (100 МБ)
   mod_last: {}           # Последняя активность пользователя (XEP-0012)

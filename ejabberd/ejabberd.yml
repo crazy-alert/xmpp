@@ -124,8 +124,6 @@ modules:                   # Подключенные модули ejabberd
     put_url: "https://@HOST@:443/upload"
     docroot: "/upload"           # Папка для хранения файлов
     max_size: 104857600    # Максимальный размер файла (100 МБ)
-    request_handlers:
-      /upload: mod_http_upload
   mod_http_upload_quota:
     max_days: 30
   mod_last: {}           # Последняя активность пользователя (XEP-0012)

@@ -109,18 +109,6 @@ services:
       - --no-tlsv1_1
       - --no-sslv3
       - --log-file=stdout
-  
-  # Опционально: adminer для управления БД (доступ через Caddy, если добавить маршрут)
-  adminer:
-    image: adminer:latest
-    container_name: xmpp_adminer
-    restart: unless-stopped
-    networks:
-      - xmpp_network
-    depends_on:
-      - postgres
-    # Публиковать порты не нужно — доступ через прокси (если настроить)
-
 
 networks:
   xmpp_network:

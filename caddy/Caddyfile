@@ -35,20 +35,20 @@ https://{$DOMAIN}:443 {
     root * /var/www/html
     php_fastcgi php:9000
 
-    handle_path /admin/* {
+    handle /admin/* {
         reverse_proxy ejabberd:5280
     }
-
-    handle_path /http-bind {
+    handle /api/* {
         reverse_proxy ejabberd:5280
     }
-
-    handle_path /ws/* {
+    handle /bosh {
         reverse_proxy ejabberd:5280
     }
-
-    handle_path /adminer/* {
-        reverse_proxy adminer:8080
+    handle /ws/* {
+        reverse_proxy ejabberd:5280
+    }
+    handle /upload/* {
+        reverse_proxy ejabberd:5280
     }
 
     file_server

@@ -62,7 +62,7 @@ listen:                    # Конфигурация прослушиваемы
   - port: 5223             # TCP-порт для клиентских подключений (c2s)
     module: ejabberd_c2s   # Модуль для Client-to-Server соединений
     # starttls: true         # Поддержка STARTTLS устар, это для старого 5222 порта
-    starttls_required: true # Обязательно использовать TLS
+    tls: true 
     max_stanza_size: 65536 # Максимальный размер XMPP-сообщения (в байтах)
     shaper: c2s_shaper     # Ограничение скорости для клиентов
 

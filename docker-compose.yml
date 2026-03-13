@@ -42,7 +42,7 @@ services:
       # - ./data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/:/certs:ro
       - ./ejabberd/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml:ro
       - ./data/ejabberd/backup:/home/ejabberd/backup
-      - ./data/ejabberd/upload:/home/ejabberd/upload
+      - ./data/ejabberd/upload:/upload
     depends_on:
       postgres:
         condition: service_healthy

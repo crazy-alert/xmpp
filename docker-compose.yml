@@ -34,11 +34,9 @@ services:
       - "5223"             # TCP-порт для клиентских подключений (c2s)
       - "5269"             # TCP-порт для серверных соединений (s2s)
       - "5280"             # HTTP-интерфейс
-      - "3478"             # UDP-порт для STUN/TURN (VoIP, WebRTC)
-      - "5349"             # TCP-порт для STUN/TURN с TLS
     ports:
-      - "5223:5223"        #
-      - "55269:5269"       #
+      - "3478:3478/udp" # UDP-порт для STUN/TURN (VoIP, WebRTC)
+      - "5349:5349"     # TCP-порт для STUN/TURN с TLS
     volumes:
       - ./data/ejabberd/ssl:/certs:ro
       # - ./data/caddy/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/:/certs:ro

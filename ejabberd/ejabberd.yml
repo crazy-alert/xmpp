@@ -143,7 +143,7 @@ modules:                   # Подключенные модули ejabberd
   mod_register:            # Регистрация пользователей
     access: none           # Отключена (запрет регистрации)
     ip_access: none        # Нельзя регистрироваться ни с какого IP
-    captcha: true
+    captcha_protected: true
     registration_watchers: # Уведомления о регистрации
       - ADMIN_JID # Администратор получает уведомления
 

@@ -110,7 +110,7 @@ modules:                   # Подключенные модули ejabberd
   mod_disco: {}            # Service Discovery (XEP-0030)
   mod_http_api: {}         # REST API
   mod_http_upload:         # HTTP File Upload (XEP-0363)
-    host: "@HOST@"   
+    host: "@HOST@/upload"   
     put_url: "@HOST@/upload"
     get_url: "@HOST@/upload"
     docroot: "/home/ejabberd/upload"           # Папка для хранения файлов

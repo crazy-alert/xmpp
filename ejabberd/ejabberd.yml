@@ -97,7 +97,8 @@ modules:                   # Подключенные модули ejabberd
   mod_admin_extra: {}      # Дополнительные административные функции
   mod_announce:            # Модуль объявлений (broadcast)
     access: admin          # Только администраторы могут рассылать
-  mod_vcard: {}
+  mod_vcard: 
+    db_type: sql
   mod_vcard_xupdate: {}
   mod_avatar: {}           # Поддержка аватаров пользователей
   mod_blocking: {}         # Блокировка контактов (XEP-0191)
@@ -113,7 +114,8 @@ modules:                   # Подключенные модули ejabberd
     get_url: "https://@HOST@/upload" # URL для скачивания файлов
     docroot: "/home/ejabberd/upload"           # Папка для хранения файлов
     max_size: 104857600    # Максимальный размер файла (100 МБ)
-  mod_last: {}             # Последняя активность пользователя (XEP-0012)
+  mod_last:            # Последняя активность пользователя (XEP-0012)
+    db_type: sql
   mod_mam:                 # Message Archive Management (XEP-0313)
     db_type: sql
     default: always        # Всегда сохранять сообщения
@@ -123,8 +125,10 @@ modules:                   # Подключенные модули ejabberd
     access_persistent: all # Разрешены постоянные комнаты
     access_admin: admin    # Администрирование комнат — только админ
   mod_ping: {}             # Ping (XEP-0199)
-  mod_privacy: {}          # Privacy Lists (XEP-0016)
-  mod_private: {}          # Хранение приватных данных (XEP-0049)
+  mod_privacy:          # Privacy Lists (XEP-0016)
+    db_type: sql
+  mod_private:           # Хранение приватных данных (XEP-0049)
+    db_type: sql
   mod_pubsub:              # PubSub (XEP-0060)
     access_createnode: all # Разрешено всем создавать узлы
     plugins:               # Подключенные плагины
@@ -136,14 +140,15 @@ modules:                   # Подключенные модули ejabberd
         notify_retract: true   # Уведомлять об удалении
         persist_items: true    # Хранить данные
         max_items: 100         # Максимум 100 сообщений
-  mod_push: {}             # Push-уведомления
+  mod_push:             # Push-уведомления
+    db_type: sql
   # notify_on: all      # Тоже пуши 
   mod_push_keepalive: {}   # Поддержка keepalive для push
   mod_stream_mgmt: {}
   mod_register:            # Регистрация пользователей
     access: none           # Отключена (запрет регистрации)
     ip_access: none        # Нельзя регистрироваться ни с какого IP
-    captcha_protected: true
+    captcha_protected: false
     registration_watchers: # Уведомления о регистрации
       - ADMIN_JID # Администратор получает уведомления
 

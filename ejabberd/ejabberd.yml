@@ -100,7 +100,7 @@ listen:                    # Конфигурация прослушиваемы
 s2s_use_starttls: optional # Нужно чтоб завести пуши на IOS
 
 modules:                   # Подключенные модули ejabberd
-  mod_roster:
+  mod_roster: {}
   mod_admin_update_sql: {}
   mod_fail2ban: {}
   mod_adhoc: {}            # Ad-hoc команды (XEP-0050)

@@ -10,6 +10,15 @@ define_macro:
 certfiles:
   - "/certs/domain.pem"
   - "/certs/domain.key"
+
+# default_db: internal       # Используется встроенная база данных ejabberd (Mnesia)
+sql_type: pgsql
+sql_server: postgres              # имя сервиса в Docker Compose
+sql_port: 5432
+sql_database: DB_NAME
+sql_username: DB_USER
+sql_password: DB_PASS
+
 # ------------------------------
 # 2. Основные настройки хостов и логирования
 # ------------------------------
@@ -78,8 +87,6 @@ listen:                    # Конфигурация прослушиваемы
     turn_max_port: 65535
 
 s2s_use_starttls: optional # Нужно чтоб завести пуши на IOS
-
-default_db: internal       # Используется встроенная база данных ejabberd (Mnesia)
 
 modules:                   # Подключенные модули ejabberd
   mod_fail2ban: {}

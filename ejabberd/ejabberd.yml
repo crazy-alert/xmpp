@@ -18,6 +18,8 @@ sql_port: 5432
 sql_database: DB_NAME
 sql_username: DB_USER
 sql_password: DB_PASS
+# sql_schema_multihost: true
+
 
 # ------------------------------
 # 2. Основные настройки хостов и логирования
@@ -89,6 +91,7 @@ listen:                    # Конфигурация прослушиваемы
 s2s_use_starttls: optional # Нужно чтоб завести пуши на IOS
 
 modules:                   # Подключенные модули ejabberd
+  mod_admin_update_sql: {}
   mod_fail2ban: {}
   mod_adhoc: {}            # Ad-hoc команды (XEP-0050)
   mod_admin_extra: {}      # Дополнительные административные функции

@@ -122,8 +122,7 @@ modules:                   # Подключенные модули ejabberd
     put_url: "https://upload.@HOST@"
     docroot: "/home/ejabberd/upload"           # Папка для хранения файлов
     max_size: 104857600    # Максимальный размер файла (100 МБ)
-  mod_last:            # Последняя активность пользователя (XEP-0012)
-
+  mod_last: {}           # Последняя активность пользователя (XEP-0012)
   mod_mam:                 # Message Archive Management (XEP-0313)
     default: always        # Всегда сохранять сообщения
   mod_muc:                 # Multi-User Chat (XEP-0045)
@@ -135,10 +134,8 @@ modules:                   # Подключенные модули ejabberd
     access_persistent: all # Разрешены постоянные комнаты
     access_admin: admin    # Администрирование комнат — только админ
   mod_ping: {}             # Ping (XEP-0199)
-  mod_privacy:          # Privacy Lists (XEP-0016)
-    db_type: sql
-  mod_private:           # Хранение приватных данных (XEP-0049)
-    db_type: sql
+  mod_privacy: {}          # Privacy Lists (XEP-0016)
+  mod_private: {}           # Хранение приватных данных (XEP-0049)
   mod_pubsub:              # PubSub (XEP-0060)
     host: "pubsub.@HOST@"
     access_createnode: all # Разрешено всем создавать узлы

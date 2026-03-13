@@ -132,7 +132,7 @@ modules:                   # Подключенные модули ejabberd
   mod_private:           # Хранение приватных данных (XEP-0049)
     db_type: sql
   mod_pubsub:              # PubSub (XEP-0060)
-    host: "https://pubsub.@HOST@"
+    host: "pubsub.@HOST@"
     access_createnode: all # Разрешено всем создавать узлы
     plugins:               # Подключенные плагины
       - "flat"             # Простая структура

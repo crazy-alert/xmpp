@@ -83,7 +83,6 @@ listen:                    # Конфигурация прослушиваемы
       "/ws": ejabberd_http_ws     # WebSocket-подключения
       "/upload": mod_http_upload  # HTTP File Upload
 
-
   - port: 3478             # UDP-порт для STUN/TURN (VoIP, WebRTC)
     transport: udp
     module: ejabberd_stun  # Модуль STUN/TURN

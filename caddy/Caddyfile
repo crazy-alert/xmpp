@@ -31,6 +31,10 @@
     }
 }
 
+upload.{$DOMAIN} {
+    reverse_proxy ejabberd:5280
+}
+
 https://{$DOMAIN}:443 {
 
 

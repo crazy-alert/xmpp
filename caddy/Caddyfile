@@ -45,6 +45,7 @@ https://{$DOMAIN}:443 {
     handle /ws/* {
         reverse_proxy ejabberd:5280
     }
+    
     handle /upload/* {
         reverse_proxy ejabberd:5280
     }

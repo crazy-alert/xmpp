@@ -33,7 +33,6 @@
 
 https://{$DOMAIN}:443 {
 
-
     handle /admin/* {
         reverse_proxy ejabberd:5280
     }

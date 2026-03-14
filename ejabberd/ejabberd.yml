@@ -73,6 +73,7 @@ listen:                    # Конфигурация прослушиваемы
     shaper: s2s_shaper     # Ограничение скорости для серверов
 
   - port: 5280             # HTTP-интерфейс
+    tls: true             #
     module: ejabberd_http  # Модуль веб-доступа
     request_handlers:      # Обработчики путей
       "/admin": ejabberd_web_admin # Веб-интерфейс админики
@@ -80,7 +81,7 @@ listen:                    # Конфигурация прослушиваемы
       "/bosh": mod_bosh           # BOSH (HTTP-подключение XMPP-клиентов)
       "/ws": ejabberd_http_ws     # WebSocket-подключения
       "/upload": mod_http_upload  # HTTP File Upload
-    tls: false             # HTTPS не используется (работает только через HTTP)
+
 
   - port: 3478             # UDP-порт для STUN/TURN (VoIP, WebRTC)
     transport: udp
@@ -129,7 +130,9 @@ modules:                   # Подключенные модули ejabberd
     max_days: 30
   mod_last: {}           # Последняя активность пользователя (XEP-0012)
   mod_mam:                 # Message Archive Management (XEP-0313)
-    default: always        # Всегда сохранять сообщения
+    db_type: sql                        # Хранить архивы в SQL
+    default: always                      # По умолчанию архивировать всё
+    request_activates_archiving: true    # Пользователь может включить архив
   mod_muc:                 # Multi-User Chat (XEP-0045)
     hosts: 
       - "conference.@HOST@"

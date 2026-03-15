@@ -74,7 +74,6 @@ listen:                    # Конфигурация прослушиваемы
     shaper: s2s_shaper     # Ограничение скорости для серверов
 
   - port: 5280             # HTTP-интерфейс
-    tls: true             #
     module: ejabberd_http  # Модуль веб-доступа
     request_handlers:      # Обработчики путей
       "/admin": ejabberd_web_admin # Веб-интерфейс админики
@@ -82,6 +81,7 @@ listen:                    # Конфигурация прослушиваемы
       "/bosh": mod_bosh           # BOSH (HTTP-подключение XMPP-клиентов)
       "/ws": ejabberd_http_ws     # WebSocket-подключения
       "/upload": mod_http_upload  # HTTP File Upload
+
 
   - port: 3478             # UDP-порт для STUN/TURN (VoIP, WebRTC)
     transport: udp
@@ -121,11 +121,14 @@ modules:                   # Подключенные модули ejabberd
   mod_disco: {}            # Service Discovery (XEP-0030)
   mod_http_api: {}         # REST API
   mod_http_upload:
-    put_url: "https://@HOST@:443/upload"
+    put_url: "https://upload.@HOST@/upload/"
     docroot: "/home/ejabberd/upload"
-    access: all
     max_size: 104857600
     thumbnail: true
+    custom_headers:
+      "Access-Control-Allow-Origin": "https://@HOST@"
+      "Access-Control-Allow-Methods": "GET,HEAD,PUT,OPTIONS"
+      "Access-Control-Allow-Headers": "Content-Type"
   mod_http_upload_quota:
     max_days: 30
   mod_last: {}           # Последняя активность пользователя (XEP-0012)
@@ -143,7 +146,7 @@ modules:                   # Подключенные модули ejabberd
     access_admin: admin    # Администрирование комнат — только админ
   mod_ping: {}             # Ping (XEP-0199)
   mod_privacy: {}          # Privacy Lists (XEP-0016)
-  mod_private: {}           # Хранение приватных данных (XEP-0049)
+  mod_private: {}          # Хранение приватных данных (XEP-0049)
   mod_pubsub:              # PubSub (XEP-0060)
     host: "pubsub.@HOST@"
     access_createnode: all # Разрешено всем создавать узлы
@@ -158,10 +161,10 @@ modules:                   # Подключенные модули ejabberd
         max_items: 100         # Максимум 100 сообщений
   mod_push:             # Push-уведомления
     db_type: sql
-  # notify_on: all      # Тоже пуши 
-  mod_push_keepalive: {}   # Поддержка keepalive для push
+  # notify_on: all           # Тоже пуши 
+  mod_push_keepalive: {}     # Поддержка keepalive для push
   mod_stream_mgmt: {}
-  mod_register:            # Регистрация пользователей
+  mod_register:              # Регистрация пользователей
     # access: none           # Отключена (запрет регистрации)
     # ip_access: none        # Нельзя регистрироваться ни с какого IP
     captcha_protected: false

@@ -25,6 +25,7 @@
                         upstream ejabberd:5269
                     }
                 }
+
             }
             tls
         }

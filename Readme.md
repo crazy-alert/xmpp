@@ -10,7 +10,7 @@ ___________________________
 ## Вариант 1 - Автоустановщик:
 (просто скопируй и вставь в терминал правой кнопкой мыши)
 ```bash
-bash <(curl -sSL https://raw.githubusercontent.com/crazy-alert/xmpp/refs/heads/main/installer.sh?timestamp=123)
+bash <(curl -sSL https://raw.githubusercontent.com/crazy-alert/XMPP/refs/heads/main/installer.sh?timestamp=123)
 ```
 ________________________
 

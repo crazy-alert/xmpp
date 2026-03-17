@@ -74,7 +74,7 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./data/caddy/data:/data
       - ./data/caddy/config:/config
-      - ./php:/var/www/html
+      - ./www:/var/www
     networks:
       - xmpp_network
     depends_on:

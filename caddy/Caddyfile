@@ -35,9 +35,6 @@ https://{$DOMAIN}:443 {
                       handle /admin/* {
                                       reverse_proxy ejabberd:5280
                                       }
-                      handle /api/* {
-                                    reverse_proxy ejabberd:5280
-                                    }
                       handle /bosh {
                                    reverse_proxy ejabberd:5280
                                    }
@@ -55,7 +52,7 @@ https://{$DOMAIN}:443 {
                                     }
                         }
 
-                      root * /var/www/html
+                      root * /var/www/public
                       php_fastcgi php:9000
                       file_server
                       }
@@ -89,7 +86,7 @@ https://{$DOMAIN}:443 {
                                                               # Добавляем CORS-заголовок к ответу от сервера
                                                               header_down Access-Control-Allow-Origin *
                                                               }
-}
+                }
 
                  conference.{$DOMAIN} {
                                       reverse_proxy ejabberd:5280

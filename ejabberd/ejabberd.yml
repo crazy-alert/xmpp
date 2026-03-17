@@ -71,6 +71,7 @@ listen:                    # Конфигурация прослушиваемы
     shaper: c2s_shaper     # Ограничение скорости для клиентов
 
   - port: 5269             # TCP-порт для серверных соединений (s2s)
+    tls: true
     module: ejabberd_s2s_in # Модуль для Server-to-Server соединений
     max_stanza_size: 131072 # Максимальный размер пакета (128 КБ)
     shaper: s2s_shaper     # Ограничение скорости для серверов

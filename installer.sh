@@ -182,11 +182,13 @@ main() {
     POSTGRES_PASSWORD=$(openssl rand -hex 8)
     TURN_PASSWORD=$(openssl rand -hex 32)
     TURN_SECRET=$(openssl rand -hex 32)
+    EJABBERD_ADMIN_PASSWORD=$(openssl rand -hex 8)
     sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" .env
     sed -i "s/^PUBLIC_IP=.*/PUBLIC_IP=$PUBLIC_IP/" .env
     sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$POSTGRES_PASSWORD/" .env
     sed -i "s/^TURN_PASSWORD=.*/TURN_PASSWORD=$TURN_PASSWORD/" .env
     sed -i "s/^TURN_SECRET=.*/TURN_SECRET=$TURN_SECRET/" .env
+    sed -i "s/^EJABBERD_ADMIN_PASSWORD=.*/EJABBERD_ADMIN_PASSWORD=$EJABBERD_ADMIN_PASSWORD/" .env
     info "Переменные в .env обновлены."
 
 
@@ -208,6 +210,7 @@ main() {
 
 Ваш xmpp сервера доступен по адресам: https://$DOMAIN:443
 
+пароль для admin@$DOMAIN   :    $EJABBERD_ADMIN_PASSWORD
 Внимание:
  - для подключения в клиенте необходимо указывать порты 443 (по умолчанию там 5222)!
  - чтобы клиенты знали, что подключаться нужно на порт 443, а не на 5222. В DNS вашего домена необходимо добавить следующие SRV-записи:

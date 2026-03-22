@@ -221,13 +221,26 @@ main() {
         tr -dc 'a-zA-Z0-9!@#$%^&*()_+' < /dev/urandom 2>/dev/null | fold -w 32 | head -n1 || openssl rand -base64 32
     }
 
+    # Запрос пароля администратора (скрытый ввод)
+    read -s -p "Введите пароль администратора (или оставьте пустым для генерации): " EJABBERD_ADMIN_PASSWORD
+    echo  # переход на новую строку после скрытого ввода
+
+    # Если пароль не введён, генерируем случайный
+    if [ -z "$EJABBERD_ADMIN_PASSWORD" ]; then
+        EJABBERD_ADMIN_PASSWORD=$(openssl rand -hex 8)
+        info "Сгенерирован случайный пароль."
+    else
+        info "Ok"
+    fi
+
+
     # 8. Замена переменных в .env
     PUBLIC_IP="$EXTERNAL_IP"
     POSTGRES_PASSWORD=$(openssl rand -hex 8)
     TURN_PASSWORD=$(openssl rand -hex 32)
     TURN_SECRET=$(openssl rand -hex 32)
     EJABBERD_ADMIN_JID=admin$DOMAIN
-    EJABBERD_ADMIN_PASSWORD=$(openssl rand -hex 8)
+
     sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" .env
     sed -i "s/^PUBLIC_IP=.*/PUBLIC_IP=$PUBLIC_IP/" .env
     sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$POSTGRES_PASSWORD/" .env

@@ -32,9 +32,12 @@
 }
 
 https://{$DOMAIN}:443 {
-                      handle /admin/* {
+                        handle /admin/* {
                                       reverse_proxy ejabberd:5280
                                       }
+                        handle /api/* {
+                                       reverse_proxy ejabberd:5280
+                                       }
                       handle /bosh {
                                    reverse_proxy ejabberd:5280
                                    }
@@ -55,42 +58,42 @@ https://{$DOMAIN}:443 {
                       root * /var/www/public
                       php_fastcgi php:9000
                       file_server
-                      }
+}
 
-                 pubsub.{$DOMAIN} {
-                                  reverse_proxy ejabberd:5280
-                                  }
+pubsub.{$DOMAIN} {
+              reverse_proxy ejabberd:5280
+              }
 
-                 upload.{$DOMAIN} {
-                                  # Обработка preflight-запросов OPTIONS для CORS
-                                  @options {
-                                           method OPTIONS
-                                           }
-                                  handle @options {
-                                                  header {
-                                                         Access-Control-Allow-Origin *
-                                                         Access-Control-Allow-Methods "PUT, GET, OPTIONS"
-                                                         Access-Control-Allow-Headers "Content-Type"
-                                                         Access-Control-Max-Age 86400
+upload.{$DOMAIN} {
+              # Обработка preflight-запросов OPTIONS для CORS
+              @options {
+                       method OPTIONS
+                       }
+              handle @options {
+                              header {
+                                     Access-Control-Allow-Origin *
+                                     Access-Control-Allow-Methods "PUT, GET, OPTIONS"
+                                     Access-Control-Allow-Headers "Content-Type"
+                                     Access-Control-Max-Age 86400
+                                     }
+                              respond "" 204
+              }
+
+              # Прокси для всех остальных запросов (PUT, GET и т.д.)
+              reverse_proxy ejabberd:5280 {
+                                          transport http {
+                                                         versions 1.1
                                                          }
-                                                  respond "" 204
-                                                  }
+                                          # Передаём оригинальный Host, который был в запросе к Caddy
+                                          header_up Host {host}
+                                          # Добавляем CORS-заголовок к ответу от сервера
+                                          header_down Access-Control-Allow-Origin *
+              }
+}
 
-                                  # Прокси для всех остальных запросов (PUT, GET и т.д.)
-                                  reverse_proxy ejabberd:5280 {
-                                                              transport http {
-                                                                             versions 1.1
-                                                                             }
-                                                              # Передаём оригинальный Host, который был в запросе к Caddy
-                                                              header_up Host {host}
-                                                              # Добавляем CORS-заголовок к ответу от сервера
-                                                              header_down Access-Control-Allow-Origin *
-                                                              }
-                }
-
-                 conference.{$DOMAIN} {
-                                      reverse_proxy ejabberd:5280
-                                      }
+conference.{$DOMAIN} {
+                  reverse_proxy ejabberd:5280
+                  }
 
 chat.{$DOMAIN} {
 

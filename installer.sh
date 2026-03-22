@@ -23,6 +23,50 @@ check_command() {
     fi
 }
 
+# Создание Пользователя в ejabberd
+create_ejabberd_user() {
+    local container=$1
+    local user_jid=$2
+    local user_pass=$3
+
+   # Разделяем JID на имя пользователя и домен
+    local username=$(echo "$user_jid" | cut -d@ -f1)
+    local host=$(echo "$user_jid" | cut -d@ -f2)
+
+    info "Создание Пользователя $user_jid в ejabberd..."
+
+    # Ждём запуска контейнера
+    local max_wait=30
+    local wait=0
+    while [ $wait -lt $max_wait ]; do
+        if docker compose  ps --filter "name=$container" --filter "status=running" | grep -q "$container"; then
+            break
+        fi
+        sleep 2
+        wait=$((wait+2))
+    done
+
+    if [ $wait -ge $max_wait ]; then
+        warn "Контейнер $container не запустился за $max_wait секунд. Пропускаем создание Пользовательа."
+        return
+    fi
+
+    # Даём время ejabberd полностью инициализироваться
+    sleep 10
+
+    # Регистрируем Пользовательа
+    if docker compose  exec "$container" /home/ejabberd/bin/ejabberdctl register "$username" "$host" "$user_pass" 2>/dev/null; then
+        info "Пользователь $user_jid успешно создан."
+    else
+        # Проверяем, существует ли уже пользователь
+        if docker compose  exec "$container" /home/ejabberd/bin/ejabberdctl check_account "$username" "$host" &>/dev/null; then
+            info "Пользователь $user_jid уже существует."
+        else
+            warn "Не удалось создать Пользователя $user_jid. Проверьте логи: docker compose  logs $container"
+        fi
+    fi
+}
+
 # Настройка UFW
 configure_ufw() {
     if command -v ufw &> /dev/null && ufw status | grep -q "Status: active"; then
@@ -61,7 +105,7 @@ check_containers() {
 
 # Основная функция
 main() {
-    info "Добро пожаловать в установщик Matrix-сервера!"
+    info "Добро пожаловать в установщик XMPP-сервера!"
 
     # 1. Директория установки
     read -p "Введите директорию для установки (Enter для использования $DEFAULT_INSTALL_DIR): " INSTALL_DIR
@@ -161,9 +205,9 @@ main() {
     }
     info "Проверка DNS для основного домена..."
     check_dns "$DOMAIN"
-    info "Проверка DNS для matrix.$DOMAIN..."
-    info "Если завершится с ошибкой - вам нужно добавить A - запись для  *.$DOMAIN , подомены нужны будут и для работы админки и Element-web "
-    check_dns "matrix.$DOMAIN"
+    info "Проверка DNS для xmpp.$DOMAIN..."
+    info "Если завершится с ошибкой - вам нужно добавить A - запись для  *.$DOMAIN , подомены нужны будут (или не нужны) "
+    check_dns "xmpp.$DOMAIN"
 
     # 7. Создание .env из примера
     if [ ! -f "example.env" ]; then
@@ -182,12 +226,14 @@ main() {
     POSTGRES_PASSWORD=$(openssl rand -hex 8)
     TURN_PASSWORD=$(openssl rand -hex 32)
     TURN_SECRET=$(openssl rand -hex 32)
+    EJABBERD_ADMIN_JID=admin$DOMAIN
     EJABBERD_ADMIN_PASSWORD=$(openssl rand -hex 8)
     sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" .env
     sed -i "s/^PUBLIC_IP=.*/PUBLIC_IP=$PUBLIC_IP/" .env
     sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$POSTGRES_PASSWORD/" .env
     sed -i "s/^TURN_PASSWORD=.*/TURN_PASSWORD=$TURN_PASSWORD/" .env
     sed -i "s/^TURN_SECRET=.*/TURN_SECRET=$TURN_SECRET/" .env
+    sed -i "s/^EJABBERD_ADMIN_JID=.*/EJABBERD_ADMIN_JID=$EJABBERD_ADMIN_JID/" .env
     sed -i "s/^EJABBERD_ADMIN_PASSWORD=.*/EJABBERD_ADMIN_PASSWORD=$EJABBERD_ADMIN_PASSWORD/" .env
     info "Переменные в .env обновлены."
 
@@ -203,6 +249,9 @@ main() {
     # 12. Проверка статуса контейнеров
     check_containers "$COMPOSE_CMD"
 
+    # Создаём админиa
+    create_ejabberd_user "ejabberd" "$EJABBERD_ADMIN_JID" "$EJABBERD_ADMIN_PASSWORD"
+
     # 13. Финальное сообщение
     echo -e "${GREEN}"
     cat << EOF
@@ -210,7 +259,14 @@ main() {
 
 Ваш xmpp сервера доступен по адресам: https://$DOMAIN:443
 
-пароль для admin@$DOMAIN   :    $EJABBERD_ADMIN_PASSWORD
+
+
+Для подключения из клиента укажите:
+    XMPP-адрес: $EJABBERD_ADMIN_JID
+        пароль: $EJABBERD_ADMIN_PASSWORD
+   имя сервера: $DOMAIN
+          порт: 443
+
 Внимание:
  - для подключения в клиенте необходимо указывать порты 443 (по умолчанию там 5222)!
  - чтобы клиенты знали, что подключаться нужно на порт 443, а не на 5222. В DNS вашего домена необходимо добавить следующие SRV-записи:

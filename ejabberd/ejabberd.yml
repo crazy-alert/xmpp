@@ -126,7 +126,9 @@ modules:                   # Подключенные модули ejabberd
   mod_admin_extra: {}      # Дополнительные административные функции
   mod_announce:            # Модуль объявлений (broadcast)
     access: admin          # Только администраторы могут рассылать
-  mod_vcard: {}
+  mod_vcard:
+    db_type: sql
+    use_cache: false
   mod_vcard_xupdate: {}
   mod_avatar: {}           # Поддержка аватаров пользователей
   mod_blocking: {}         # Блокировка контактов (XEP-0191)

@@ -80,7 +80,7 @@ listen:                    # Конфигурация прослушиваемы
     module: ejabberd_c2s   # Модуль для Client-to-Server соединений
     # starttls: true         # Поддержка STARTTLS устар, это для старого 5222 порта
     tls: true
-    proxy_protocol: true
+    use_proxy_protocol: true
     max_stanza_size: 65536 # Максимальный размер XMPP-сообщения (в байтах)
     shaper: c2s_shaper     # Ограничение скорости для клиентов
 

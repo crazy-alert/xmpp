@@ -1,9 +1,8 @@
 #!/bin/bash
 set -e
 
-# Цвета
 GREEN='\033[0;32m'
-YELLOW='033[1;33m'
+YELLOW='\033[1;33m'          # исправлено: был пропущен слеш
 RED='\033[0;31m'
 NC='\033[0m'
 
@@ -11,10 +10,10 @@ NC='\033[0m'
 REPO_URL="https://github.com/crazy-alert/xmpp.git"
 DEFAULT_INSTALL_DIR="/opt/xmpp"
 
-# Функции вывода
-info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
-error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
+# Функции вывода (теперь все пишут в stderr)
+info()  { echo -e "${GREEN}[INFO]${NC} $1" >&2; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
+error() { echo -e "${RED}[ERROR]${NC} $1" >&2; exit 1; }
 
 # Проверка наличия команды
 check_command() {
@@ -23,23 +22,22 @@ check_command() {
     fi
 }
 
-# Создание Пользователя в ejabberd
+# Создание пользователя в ejabberd (использует глобальную COMPOSE_CMD)
 create_ejabberd_user() {
     local container=$1
     local user_jid=$2
     local user_pass=$3
 
-   # Разделяем JID на имя пользователя и домен
     local username=$(echo "$user_jid" | cut -d@ -f1)
     local host=$(echo "$user_jid" | cut -d@ -f2)
 
-    info "Создание Пользователя $user_jid в ejabberd..."
+    info "Создание пользователя $user_jid в ejabberd..."
 
-    # Ждём запуска контейнера
+    # Ждём, пока контейнер запустится
     local max_wait=30
     local wait=0
     while [ $wait -lt $max_wait ]; do
-        if docker compose  ps --filter "name=$container" --filter "status=running" | grep -q "$container"; then
+        if $COMPOSE_CMD ps --filter "name=$container" --filter "status=running" | grep -q "$container"; then
             break
         fi
         sleep 2
@@ -47,25 +45,42 @@ create_ejabberd_user() {
     done
 
     if [ $wait -ge $max_wait ]; then
-        warn "Контейнер $container не запустился за $max_wait секунд. Пропускаем создание Пользовательа."
+        warn "Контейнер $container не запустился за $max_wait секунд. Пропускаем создание пользователя."
         return
     fi
 
-    # Даём время ejabberd полностью инициализироваться
-    sleep 10
+    # Ожидание готовности ejabberd (вместо sleep 10)
+    info "Ожидание готовности ejabberd..."
+    local retries=30
+    local count=0
+    while [ $count -lt $retries ]; do
+        if $COMPOSE_CMD exec "$container" /home/ejabberd/bin/ejabberdctl status &>/dev/null; then
+            info "ejabberd готов."
+            break
+        fi
+        sleep 2
+        count=$((count+1))
+    done
 
-    # Регистрируем Пользовательа
-    if docker compose  exec "$container" /home/ejabberd/bin/ejabberdctl register "$username" "$host" "$user_pass" 2>/dev/null; then
+    if [ $count -ge $retries ]; then
+        warn "ejabberd не ответил за отведённое время. Пропускаем создание пользователя."
+        return
+    fi
+
+    # Регистрируем пользователя
+    if $COMPOSE_CMD exec "$container" /home/ejabberd/bin/ejabberdctl register "$username" "$host" "$user_pass" 2>/dev/null; then
         info "Пользователь $user_jid успешно создан."
     else
         # Проверяем, существует ли уже пользователь
-        if docker compose  exec "$container" /home/ejabberd/bin/ejabberdctl check_account "$username" "$host" &>/dev/null; then
+        if $COMPOSE_CMD exec "$container" /home/ejabberd/bin/ejabberdctl check_account "$username" "$host" &>/dev/null; then
             info "Пользователь $user_jid уже существует."
         else
-            warn "Не удалось создать Пользователя $user_jid. Проверьте логи: docker compose  logs $container"
+            warn "Не удалось создать пользователя $user_jid. Проверьте логи: $COMPOSE_CMD logs $container"
         fi
     fi
 }
+
+# Генерация токена (возвращает токен через stdout, все сообщения в stderr)
 create_user_token() {
     local container=$1
     local user_jid=$2
@@ -74,13 +89,16 @@ create_user_token() {
     local host=$(echo "$user_jid" | cut -d@ -f2)
 
     info "Генерация OAuth-токена для пользователя $user_jid..."
-    sleep 5
-    local token
-    token=$(docker compose exec "$container" /home/ejabberd/bin/ejabberdctl oauth_issue_token "$user_jid" 32140800 "ejabberd:admin" 2>/dev/null | tail -n1)
-echo "$token"
 
-    if [ -n "$token" ] && [[ "$token" =~ ^[A-Za-z0-9_\-]+$ ]]; then
-        echo "$token"        # возвращаем токен через stdout
+    # Небольшая пауза для завершения регистрации
+    sleep 2
+
+    local token
+    token=$($COMPOSE_CMD exec "$container" /home/ejabberd/bin/ejabberdctl oauth_issue_token "$user_jid" 32140800 "ejabberd:admin" 2>/dev/null | tail -n1)
+
+    # Проверяем, что токен не пуст и не содержит пробелов (упрощённая проверка)
+    if [[ -n "$token" && ! "$token" =~ [[:space:]] ]]; then
+        echo "$token"        # только токен в stdout
         info "OAuth-токен для пользователя сгенерирован."
     else
         warn "Не удалось получить OAuth-токен для $user_jid. Проверьте, что модуль OAuth включён в ejabberd."
@@ -91,33 +109,34 @@ echo "$token"
 # Настройка UFW
 configure_ufw() {
     if command -v ufw &> /dev/null && ufw status | grep -q "Status: active"; then
-        warn "Обнаружен активный UFW. Необходимо открыть порты"
+        warn "Обнаружен активный UFW. Необходимо открыть порты."
         read -p "Разрешить автоматически добавить правила UFW? (y/N): " CONFIRM
         if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
-        info "Добавление правил UFW..."
-        ufw allow 22/tcp comment 'ssh'
-        ufw allow 80/tcp comment ' HTTP'
-        ufw allow 443/tcp comment ' HTTPS'
-        ufw allow 3478/tcp comment 'TURN'
-        ufw allow 3478/udp comment 'STUN/TURN (UDP)'
-        ufw allow 5349/tcp comment 'TURN over TLS (TCP) '
-        ufw allow 5349/udp comment 'TURN over DTLS (UDP)'
-        ufw allow 49152:65535/udp comment 'COTURN'
-        ufw reload
-        info "Правила UFW добавлены."
+            info "Добавление правил UFW..."
+            ufw allow 22/tcp comment 'ssh'
+            ufw allow 80/tcp comment 'HTTP'
+            ufw allow 443/tcp comment 'HTTPS'
+            ufw allow 3478/tcp comment 'TURN'
+            ufw allow 3478/udp comment 'STUN/TURN (UDP)'
+            ufw allow 5349/tcp comment 'TURN over TLS (TCP)'
+            ufw allow 5349/udp comment 'TURN over DTLS (UDP)'
+            ufw allow 49152:65535/udp comment 'COTURN'
+            ufw reload
+            info "Правила UFW добавлены."
         else
-            warn "Не забудьте вручную открыть порты"
+            warn "Не забудьте вручную открыть порты."
         fi
     else
         info "UFW не установлен или не активен. Пропускаем настройку файрвола."
     fi
 }
 
-# Проверка статуса контейнеров
+# Проверка статуса контейнеров (исправлено: используем docker ps)
 check_containers() {
     local compose_cmd="$1"
     sleep 5
-    if $compose_cmd ps | grep -q "Exit"; then
+    # Проверяем, есть ли остановленные контейнеры
+    if $compose_cmd ps --filter "status=exited" --format "{{.Names}}" | grep -q .; then
         warn "Некоторые контейнеры остановились. Проверьте логи: $compose_cmd logs"
     else
         info "Все контейнеры запущены успешно."
@@ -126,6 +145,11 @@ check_containers() {
 
 # Основная функция
 main() {
+    # Проверка прав root
+    if [[ $EUID -ne 0 ]]; then
+        error "Этот скрипт должен выполняться от root (sudo)."
+    fi
+
     info "Добро пожаловать в установщик XMPP-сервера!"
 
     # 1. Директория установки
@@ -141,17 +165,11 @@ main() {
     if ! command -v docker &> /dev/null; then
         info "Docker не найден. Устанавливаем Docker..."
 
-        # Устанавливаем зависимости для добавления репозитория
         apt install -y ca-certificates curl
-
-        # Создаём директорию для ключей (если нет)
         install -m 0755 -d /etc/apt/keyrings
-
-        # Скачиваем GPG-ключ Docker
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
         chmod a+r /etc/apt/keyrings/docker.asc
 
-        # Определяем дистрибутив (ubuntu/debian)
         source /etc/os-release
         if [[ "$ID" == "ubuntu" ]]; then
             DISTRO="ubuntu"
@@ -161,17 +179,22 @@ main() {
             error "Неподдерживаемый дистрибутив: $ID"
         fi
 
-        # Добавляем репозиторий Docker
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$DISTRO ${VERSION_CODENAME} stable" | \
             tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-        # Обновляем список пакетов и устанавливаем Docker
         apt update
         apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
         info "Docker успешно установлен."
     else
         info "Docker уже установлен, пропускаем установку."
+    fi
+
+    # Проверяем, запущен ли демон Docker
+    if ! systemctl is-active --quiet docker; then
+        info "Запускаем Docker..."
+        systemctl start docker
+        systemctl enable docker
     fi
 
     # 4. Определяем команду Docker Compose
@@ -184,6 +207,7 @@ main() {
         error "Docker Compose не найден. Установите docker-compose или docker compose."
     fi
     info "Используется команда: $COMPOSE_CMD"
+    export COMPOSE_CMD   # делаем глобальной для использования в функциях
 
     # 5. Подготовка директории и клонирование репозитория
     if [ -d "$INSTALL_DIR" ]; then
@@ -211,7 +235,7 @@ main() {
     fi
     info "Внешний IP: $EXTERNAL_IP"
 
-    # Проверка DNS
+    # Проверка DNS (основной домен – обязательная ошибка, поддомен – предупреждение)
     check_dns() {
         local host="$1"
         local ip
@@ -226,9 +250,14 @@ main() {
     }
     info "Проверка DNS для основного домена..."
     check_dns "$DOMAIN"
+
     info "Проверка DNS для xmpp.$DOMAIN..."
-    info "Если завершится с ошибкой - вам нужно добавить A - запись для  *.$DOMAIN , подомены нужны будут (или не нужны) "
-    check_dns "xmpp.$DOMAIN"
+    if ! dig +short "xmpp.$DOMAIN" A | grep -q .; then
+        warn "Запись A для xmpp.$DOMAIN не найдена. Это может потребоваться для корректной работы клиентов."
+        warn "Добавьте A-запись для xmpp.$DOMAIN, указывающую на $EXTERNAL_IP."
+    else
+        check_dns "xmpp.$DOMAIN"  # используем ту же функцию, но она вызовет error при несовпадении
+    fi
 
     # 7. Создание .env из примера
     if [ ! -f "example.env" ]; then
@@ -237,66 +266,79 @@ main() {
     cp example.env .env
     info "Файл .env создан."
 
-    # Генератор пароля
-    generate_password() {
-        tr -dc 'a-zA-Z0-9!@#$%^&*()_+' < /dev/urandom 2>/dev/null | fold -w 32 | head -n1 || openssl rand -base64 32
-    }
+    # Генератор пароля (встроен в скрипт)
+    # Удалена неиспользуемая функция generate_password
 
-    # Запрос пароля администратора (скрытый ввод)
-    read -s -p "Введите пароль администратора (или оставьте пустым для генерации): " EJABBERD_ADMIN_PASSWORD
-    echo  # переход на новую строку после скрытого ввода
+    # Запрос пароля администратора с подтверждением
+    while true; do
+        read -s -p "Введите пароль администратора: " EJABBERD_ADMIN_PASSWORD
+        echo
+        read -s -p "Подтвердите пароль администратора: " EJABBERD_ADMIN_PASSWORD2
+        echo
+        if [ "$EJABBERD_ADMIN_PASSWORD" = "$EJABBERD_ADMIN_PASSWORD2" ]; then
+            break
+        else
+            echo "Пароли не совпадают. Попробуйте ещё раз."
+        fi
+    done
 
-    # Если пароль не введён, генерируем случайный
+    # Если пароль не введён (пустой), генерируем случайный
     if [ -z "$EJABBERD_ADMIN_PASSWORD" ]; then
         EJABBERD_ADMIN_PASSWORD=$(openssl rand -hex 8)
-        info "Сгенерирован случайный пароль."
+        info "Сгенерирован случайный пароль: $EJABBERD_ADMIN_PASSWORD"
     else
-        info "Ok"
+        info "Пароль принят."
     fi
 
-
-    # 8. Замена переменных в .env
+    # 8. Замена переменных в .env (безопасная замена с разделителем '|')
     PUBLIC_IP="$EXTERNAL_IP"
     POSTGRES_PASSWORD=$(openssl rand -hex 8)
     TURN_PASSWORD=$(openssl rand -hex 32)
     TURN_SECRET=$(openssl rand -hex 32)
     EJABBERD_ADMIN_JID=admin@$DOMAIN
 
-    sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" .env
-    sed -i "s/^PUBLIC_IP=.*/PUBLIC_IP=$PUBLIC_IP/" .env
-    sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$POSTGRES_PASSWORD/" .env
-    sed -i "s/^TURN_PASSWORD=.*/TURN_PASSWORD=$TURN_PASSWORD/" .env
-    sed -i "s/^TURN_SECRET=.*/TURN_SECRET=$TURN_SECRET/" .env
-    sed -i "s/^EJABBERD_ADMIN_JID=.*/EJABBERD_ADMIN_JID=$EJABBERD_ADMIN_JID/" .env
-    sed -i "s/^EJABBERD_ADMIN_PASSWORD=.*/EJABBERD_ADMIN_PASSWORD=$EJABBERD_ADMIN_PASSWORD/" .env
+    # Используем sed с разделителем '|' и экранируем возможные спецсимволы в паролях (только /)
+    # Поскольку пароли могут содержать '|', дополнительно экранируем их
+    escape_sed() {
+        echo "$1" | sed 's/|/\\|/g'
+    }
+
+    sed -i "s|^DOMAIN=.*|DOMAIN=$DOMAIN|" .env
+    sed -i "s|^PUBLIC_IP=.*|PUBLIC_IP=$PUBLIC_IP|" .env
+    sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(escape_sed "$POSTGRES_PASSWORD")|" .env
+    sed -i "s|^TURN_PASSWORD=.*|TURN_PASSWORD=$(escape_sed "$TURN_PASSWORD")|" .env
+    sed -i "s|^TURN_SECRET=.*|TURN_SECRET=$(escape_sed "$TURN_SECRET")|" .env
+    sed -i "s|^EJABBERD_ADMIN_JID=.*|EJABBERD_ADMIN_JID=$EJABBERD_ADMIN_JID|" .env
+    sed -i "s|^EJABBERD_ADMIN_PASSWORD=.*|EJABBERD_ADMIN_PASSWORD=$(escape_sed "$EJABBERD_ADMIN_PASSWORD")|" .env
+
     info "Переменные в .env обновлены."
 
+    # Устанавливаем строгие права на .env
+    chmod 600 .env
+    info "Права доступа к .env установлены (600)."
 
-
-    # 10. Настройка UFW (опционально)
+    # 9. Настройка UFW (опционально)
     configure_ufw
 
-    # 11. Запуск Docker-стека
+    # 10. Запуск Docker-стека
     info "Запуск контейнеров с помощью $COMPOSE_CMD..."
     $COMPOSE_CMD up -d
 
-    # 12. Проверка статуса контейнеров
+    # 11. Проверка статуса контейнеров
     check_containers "$COMPOSE_CMD"
 
-    # Создаём админиa
+    # Создаём администратора
     create_ejabberd_user "ejabberd" "$EJABBERD_ADMIN_JID" "$EJABBERD_ADMIN_PASSWORD"
 
+    # Генерируем токен (переменная получит только токен, т.к. info пишут в stderr)
     EJABBERD_TOKEN=$(create_user_token "ejabberd" "$EJABBERD_ADMIN_JID")
 
-
-    # 13. Финальное сообщение
+    # 12. Финальное сообщение
     echo -e "${GREEN}"
     cat << EOF
 ✅ Установка завершена!
 
-Ваш xmpp сервера доступен по адресам: https://$DOMAIN:443
-
-
+Ваш XMPP-сервер доступен по адресу: https://$DOMAIN:443
 
 Для подключения из клиента укажите:
     XMPP-адрес: $EJABBERD_ADMIN_JID
@@ -307,8 +349,8 @@ main() {
 OAuth-токен для пользователя сгенерирован: $EJABBERD_TOKEN
 
 Внимание:
- - для подключения в клиенте необходимо указывать порты 443 (по умолчанию там 5222)!
- - чтобы клиенты знали, что подключаться нужно на порт 443, а не на 5222. В DNS вашего домена необходимо добавить следующие SRV-записи:
+ - для подключения в клиенте необходимо указывать порт 443 (по умолчанию используется 5222).
+ - чтобы клиенты знали, что подключаться нужно на порт 443, а не на 5222, в DNS вашего домена необходимо добавить следующие SRV-записи:
          _xmpps-client._tcp.$DOMAIN. 86400 IN SRV 5  0 443 $DOMAIN.
          _xmpp-client._tcp.$DOMAIN.  86400 IN SRV 10 0 443 $DOMAIN.
 
@@ -317,7 +359,7 @@ OAuth-токен для пользователя сгенерирован: $EJAB
 
 Управление регистрацией описано в README.
 
-Вы можете самостоятельно внести изменения в .env файл (команда nano .env), после вызвать "docker compose down &&  docker compose  up -d"
+Вы можете самостоятельно внести изменения в .env файл (команда nano .env), после вызвать "docker compose down && docker compose up -d"
 EOF
     echo -e "${NC}"
 }
